@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
   ArrowRight,
@@ -116,9 +117,15 @@ export default async function Home() {
               ))}
             </CardContent>
           </Card>
-          <p className="mt-5 text-center text-xs text-slate-500">
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-slate-400">
             Code. Coffee. Internship. Repeat. ☕
-          </p>
+            <Link href="/privacy" className="underline-offset-4 hover:text-slate-200 hover:underline">
+              Privacy
+            </Link>
+            <Link href="/terms" className="underline-offset-4 hover:text-slate-200 hover:underline">
+              Terms
+            </Link>
+          </div>
         </section>
       </div>
     </main>
