@@ -2,7 +2,7 @@
 
 A secure, semester-aware attendance and activity system for the AUIS IT Department. Interns log their own work, track progress, and review history; administrators manage access, semesters, department analytics, audit events, and formatted Excel exports.
 
-> Production status: the application, Neon schema, migrations, seed, and automated checks are ready. Google login becomes operational after the department supplies and configures the Google OAuth client described below.
+> Production status: the application is live with its Neon schema, seed data, encrypted Vercel environment, and dedicated published Google OAuth configuration. The Google handoff and AUIS domain hint are verified; final authenticated admin/student acceptance requires real AUIS accounts.
 
 - Production: <https://auis-it-intern-attendance.vercel.app>
 - Source: <https://github.com/HazhirDevX/auis-it-intern-attendance>
