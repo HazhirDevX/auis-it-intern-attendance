@@ -12,6 +12,7 @@ export default async function AccessDeniedPage({
 }) {
   const { reason } = await searchParams;
   const domainError = reason === "domain";
+  const roleError = reason === "forbidden";
   return (
     <main className="grid min-h-screen place-items-center bg-[#071d37] px-4 py-10">
       <Card className="w-full max-w-lg border-white/10 shadow-2xl">
@@ -36,7 +37,9 @@ export default async function AccessDeniedPage({
           <p className="mt-3 text-sm leading-6 text-muted-foreground">
             {domainError
               ? "This portal only accepts verified @auis.edu.krd Google accounts."
-              : "You successfully entered AUIS territory, but you are not currently registered as an IT intern. Contact the IT Department administrator if you believe this is a mistake."}
+              : roleError
+                ? "Your account is authorized, but this page requires an administrator role."
+                : "You successfully entered AUIS territory, but you are not currently registered as an IT intern. Contact the IT Department administrator if you believe this is a mistake."}
           </p>
           <div className="mt-6 rounded-xl border bg-muted/50 p-4 text-left text-sm">
             <p className="flex items-center gap-2 font-medium text-primary">
@@ -44,8 +47,9 @@ export default async function AccessDeniedPage({
               Need access?
             </p>
             <p className="mt-1 pl-6 text-muted-foreground">
-              Ask an IT Department administrator to add your AUIS email to the
-              authorized intern list.
+              {roleError
+                ? "Return to your dashboard or ask an administrator if your assigned role is incorrect."
+                : "Ask an IT Department administrator to add your AUIS email to the authorized intern list."}
             </p>
           </div>
           <Button asChild className="mt-7 w-full">

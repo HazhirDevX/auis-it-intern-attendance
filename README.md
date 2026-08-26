@@ -100,10 +100,9 @@ npm run dev
 
 Open `http://localhost:3000`. The seed is idempotent and creates:
 
-- `ha23109@auis.edu.krd` as an active `ADMIN`
+- `zhir.barzan@auis.edu.krd` and `karo.omed@auis.edu.krd` as active administrators
+- `lk24117@auis.edu.krd`, `dd23103@auis.edu.krd`, and `hazhir.a.2004@auis.edu.krd` as active students
 - `Fall 2026` as the initial active semester
-
-Development fixtures are disabled by default. To add removable examples locally, set `SEED_DEMO_DATA=true` before running the seed; do not enable it in production.
 
 ## Google OAuth setup
 

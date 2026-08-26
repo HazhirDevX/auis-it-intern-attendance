@@ -1,36 +1,54 @@
 import { config } from "dotenv";
 
+import { INITIAL_AUTHORIZED_USERS } from "@/lib/constants";
+
 config({ path: ".env.local" });
+
+const LEGACY_ADMIN_EMAIL = "ha23109@auis.edu.krd";
 
 async function main() {
   const { and, eq } = await import("drizzle-orm");
   const { neon } = await import("@neondatabase/serverless");
   const { drizzle } = await import("drizzle-orm/neon-http");
-  const schema = await import("./schema");
-  const { activities, auditLogs, semesterMemberships, semesters, users } =
-    schema;
+  const { auditLogs, semesterMemberships, semesters, users } = await import(
+    "./schema"
+  );
 
   if (!process.env.DATABASE_URL) {
     throw new Error("DATABASE_URL is required to seed the database.");
   }
 
-  const db = drizzle(neon(process.env.DATABASE_URL), { schema });
+  const db = drizzle(neon(process.env.DATABASE_URL));
 
-  const adminEmail = "ha23109@auis.edu.krd";
+  const seededUsers = [];
 
-  const [admin] = await db
-    .insert(users)
-    .values({
-      name: "Hazhir",
-      email: adminEmail,
-      role: "ADMIN",
-      active: true,
-    })
-    .onConflictDoUpdate({
-      target: users.email,
-      set: { role: "ADMIN", active: true, updatedAt: new Date() },
-    })
-    .returning();
+  for (const account of INITIAL_AUTHORIZED_USERS) {
+    const [user] = await db
+      .insert(users)
+      .values({ ...account, active: true })
+      .onConflictDoUpdate({
+        target: users.email,
+        set: {
+          role: account.role,
+          active: true,
+          updatedAt: new Date(),
+        },
+      })
+      .returning({ id: users.id, email: users.email, role: users.role });
+    seededUsers.push(user);
+  }
+
+  // Preserve the former administrator and all related history, but remove the
+  // obsolete sole-admin grant from the previous initial configuration.
+  await db
+    .update(users)
+    .set({ role: "STUDENT", updatedAt: new Date() })
+    .where(
+      and(eq(users.email, LEGACY_ADMIN_EMAIL), eq(users.role, "ADMIN")),
+    );
+
+  const primaryAdmin = seededUsers.find((user) => user.role === "ADMIN");
+  if (!primaryAdmin) throw new Error("At least one seeded admin is required.");
 
   const [semester] = await db
     .insert(semesters)
@@ -40,90 +58,47 @@ async function main() {
       endDate: "2026-12-20",
       targetHours: 120,
       status: "ACTIVE",
-      createdBy: admin.id,
+      createdBy: primaryAdmin.id,
     })
     .onConflictDoUpdate({
       target: semesters.name,
       set: { targetHours: 120, updatedAt: new Date() },
     })
-    .returning();
+    .returning({ id: semesters.id, name: semesters.name });
 
-  await db
-    .insert(semesterMemberships)
-    .values({ userId: admin.id, semesterId: semester.id, active: true })
-    .onConflictDoUpdate({
-      target: [semesterMemberships.userId, semesterMemberships.semesterId],
-      set: { active: true },
-    });
-
-  if (process.env.SEED_DEMO_DATA === "true") {
-    const demoUsers = [
-      { name: "Danyar Ahmed", email: "dd23103@auis.edu.krd" },
-      { name: "Lana Karim", email: "lk23111@auis.edu.krd" },
-    ];
-
-    for (const fixture of demoUsers) {
-      const [student] = await db
-        .insert(users)
-        .values({ ...fixture, role: "STUDENT", active: true })
-        .onConflictDoUpdate({
-          target: users.email,
-          set: { name: fixture.name, active: true, updatedAt: new Date() },
-        })
-        .returning();
-
-      await db
-        .insert(semesterMemberships)
-        .values({ userId: student.id, semesterId: semester.id, active: true })
-        .onConflictDoNothing();
-
-      const existing = await db
-        .select({ id: activities.id })
-        .from(activities)
-        .where(
-          and(
-            eq(activities.userId, student.id),
-            eq(activities.semesterId, semester.id),
-          ),
-        )
-        .limit(1);
-
-      if (existing.length === 0) {
-        await db.insert(activities).values([
-          {
-            userId: student.id,
-            semesterId: semester.id,
-            workDate: "2026-08-24",
-            hours: 4,
-            description:
-              "Configured lab workstations and documented setup steps.",
-            createdBy: student.id,
-          },
-          {
-            userId: student.id,
-            semesterId: semester.id,
-            workDate: "2026-08-25",
-            hours: 3.5,
-            description:
-              "Resolved help desk tickets and updated the asset register.",
-            createdBy: student.id,
-          },
-        ]);
-      }
-    }
+  for (const user of seededUsers) {
+    await db
+      .insert(semesterMemberships)
+      .values({ userId: user.id, semesterId: semester.id, active: true })
+      .onConflictDoUpdate({
+        target: [semesterMemberships.userId, semesterMemberships.semesterId],
+        set: { active: true },
+      });
   }
 
-  await db.insert(auditLogs).values({
-    actorUserId: admin.id,
-    action: "SYSTEM_SEEDED",
-    entityType: "SYSTEM",
-    metadata: {
-      semester: semester.name,
-      demoData: process.env.SEED_DEMO_DATA === "true",
-    },
-  });
+  const [existingAudit] = await db
+    .select({ id: auditLogs.id })
+    .from(auditLogs)
+    .where(eq(auditLogs.action, "INITIAL_ACCESS_CONFIGURED"))
+    .limit(1);
 
-  console.log(`Seed complete: ${admin.email}, ${semester.name}.`);
+  if (!existingAudit) {
+    await db.insert(auditLogs).values({
+      actorUserId: primaryAdmin.id,
+      action: "INITIAL_ACCESS_CONFIGURED",
+      entityType: "SYSTEM",
+      metadata: {
+        accounts: INITIAL_AUTHORIZED_USERS.map(({ email, role }) => ({
+          email,
+          role,
+        })),
+      },
+    });
+  }
+
+  console.log(
+    `Seed complete: ${INITIAL_AUTHORIZED_USERS.length} authorized accounts and Fall 2026.`,
+  );
 }
 
 void main().catch((error) => {
