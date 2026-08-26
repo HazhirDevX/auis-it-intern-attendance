@@ -6,7 +6,7 @@ import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { isAuisEmail, normalizeAuisEmail } from "@/lib/validation";
 
-const publicPaths = ["/", "/access-denied"];
+const publicPaths = ["/", "/access-denied", "/privacy", "/terms", "/robots.txt"];
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
