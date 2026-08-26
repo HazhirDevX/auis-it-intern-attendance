@@ -4,6 +4,9 @@ A secure, semester-aware attendance and activity system for the AUIS IT Departme
 
 > Production status: the application, Neon schema, migrations, seed, and automated checks are ready. Google login becomes operational after the department supplies and configures the Google OAuth client described below.
 
+- Production: <https://auis-it-intern-attendance.vercel.app>
+- Source: <https://github.com/HazhirDevX/auis-it-intern-attendance>
+
 ## Highlights
 
 - Two-gate Google authentication: verified `@auis.edu.krd` account **and** an active authorized-user database record
@@ -109,10 +112,10 @@ Development fixtures are disabled by default. To add removable examples locally,
 3. Create **Credentials → OAuth client ID → Web application**.
 4. Add authorized JavaScript origins:
    - `http://localhost:3000`
-   - `https://YOUR-PRODUCTION-DOMAIN`
+   - `https://auis-it-intern-attendance.vercel.app`
 5. Add authorized redirect URIs exactly:
    - `http://localhost:3000/api/auth/callback/google`
-   - `https://YOUR-PRODUCTION-DOMAIN/api/auth/callback/google`
+   - `https://auis-it-intern-attendance.vercel.app/api/auth/callback/google`
 6. Put the client ID and secret in `.env.local` and in Vercel’s encrypted environment variables.
 
 The Google `hd` hint improves account selection, but it is **not** treated as authorization. The Auth.js callback verifies Google’s `email_verified` claim, validates the exact `auis.edu.krd` domain, then queries the active authorized-user record. Removing either check would weaken the security model.

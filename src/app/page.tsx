@@ -18,6 +18,9 @@ import { Card, CardContent } from "@/components/ui/card";
 export default async function Home() {
   const user = await getCurrentUser();
   if (user) redirect("/dashboard");
+  const oauthConfigured = Boolean(
+    process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET,
+  );
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#071d37] text-white">
@@ -47,6 +50,7 @@ export default async function Home() {
           <form action={signInWithGoogle} className="mt-9 w-full sm:w-auto">
             <Button
               size="lg"
+              disabled={!oauthConfigured}
               className="h-12 w-full bg-[#c4981b] px-6 font-semibold text-[#071d37] shadow-lg shadow-black/20 hover:bg-[#d5ac32] sm:w-auto"
             >
               Continue with AUIS Google
@@ -55,7 +59,9 @@ export default async function Home() {
           </form>
           <div className="mt-5 flex items-center gap-2 text-sm text-slate-400">
             <LockKeyhole className="size-4 text-[#d7b64f]" />
-            Only registered @auis.edu.krd accounts can enter.
+            {oauthConfigured
+              ? "Only registered @auis.edu.krd accounts can enter."
+              : "Google OAuth configuration is pending administrator setup."}
           </div>
         </section>
 
