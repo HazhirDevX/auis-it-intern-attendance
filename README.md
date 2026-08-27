@@ -1,4 +1,4 @@
-# AUIS IT Intern Attendance Portal
+# AUIS IT Intern Portal
 
 A secure, semester-aware attendance and activity system for the AUIS IT Department. Interns log their own work, track progress, and review history; administrators manage access, semesters, department analytics, audit events, and formatted Excel exports.
 
@@ -9,7 +9,7 @@ A secure, semester-aware attendance and activity system for the AUIS IT Departme
 
 ## Highlights
 
-- Two-gate Google authentication: verified `@auis.edu.krd` account **and** an active authorized-user database record
+- Two-gate Google authentication: verified AUIS or explicitly approved Google account **and** an active authorized-user database record
 - Server-enforced `STUDENT` and `ADMIN` permissions on every mutation and protected export
 - Semester membership model that starts a new period at zero while retaining all prior activity
 - Student logging, editing, confirmed deletion, analytics, progress, pagination, and semester history
@@ -100,7 +100,7 @@ npm run dev
 
 Open `http://localhost:3000`. The seed is idempotent and creates:
 
-- `zhir.barzan@auis.edu.krd` and `karo.omed@auis.edu.krd` as active administrators
+- `zhir.barzan@auis.edu.krd`, `karo.omed@auis.edu.krd`, and `ha23109@auis.edu.krd` as active administrators
 - `lk24117@auis.edu.krd`, `dd23103@auis.edu.krd`, and `hazhir.a.2004@auis.edu.krd` as active students
 - `Fall 2026` as the initial active semester
 
@@ -117,7 +117,7 @@ Open `http://localhost:3000`. The seed is idempotent and creates:
    - `https://auis-it-intern-attendance.vercel.app/api/auth/callback/google`
 6. Put the client ID and secret in `.env.local` and in Vercel’s encrypted environment variables.
 
-The Google `hd` hint improves account selection, but it is **not** treated as authorization. The Auth.js callback verifies Google’s `email_verified` claim, validates the exact `auis.edu.krd` domain, then queries the active authorized-user record. Removing either check would weaken the security model.
+The Google `hd` hint improves account selection, but it is **not** treated as authorization. The Auth.js callback verifies Google’s `email_verified` claim, validates the exact `auis.edu.krd` domain or the explicit external-account allowlist, then queries the active authorized-user record. Removing either check would weaken the security model.
 
 ## Commands
 

@@ -16,6 +16,11 @@ describe("initial authorized accounts", () => {
         role: "ADMIN",
       },
       {
+        name: "Hazhir Aso",
+        email: "ha23109@auis.edu.krd",
+        role: "ADMIN",
+      },
+      {
         name: "LK 24117",
         email: "lk24117@auis.edu.krd",
         role: "STUDENT",

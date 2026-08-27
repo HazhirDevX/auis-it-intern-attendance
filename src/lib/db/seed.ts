@@ -4,10 +4,8 @@ import { INITIAL_AUTHORIZED_USERS } from "@/lib/constants";
 
 config({ path: ".env.local" });
 
-const LEGACY_ADMIN_EMAIL = "ha23109@auis.edu.krd";
-
 async function main() {
-  const { and, eq } = await import("drizzle-orm");
+  const { eq } = await import("drizzle-orm");
   const { neon } = await import("@neondatabase/serverless");
   const { drizzle } = await import("drizzle-orm/neon-http");
   const { auditLogs, semesterMemberships, semesters, users } = await import(
@@ -37,15 +35,6 @@ async function main() {
       .returning({ id: users.id, email: users.email, role: users.role });
     seededUsers.push(user);
   }
-
-  // Preserve the former administrator and all related history, but remove the
-  // obsolete sole-admin grant from the previous initial configuration.
-  await db
-    .update(users)
-    .set({ role: "STUDENT", updatedAt: new Date() })
-    .where(
-      and(eq(users.email, LEGACY_ADMIN_EMAIL), eq(users.role, "ADMIN")),
-    );
 
   const primaryAdmin = seededUsers.find((user) => user.role === "ADMIN");
   if (!primaryAdmin) throw new Error("At least one seeded admin is required.");

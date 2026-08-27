@@ -8,7 +8,7 @@ export default function PrivacyPage() {
   return (
     <LegalPage title="Privacy Policy" updated="August 26, 2026">
       <p>
-        The AUIS IT Intern Attendance Portal is an internal attendance and
+        The AUIS IT Intern Portal is an internal attendance and
         activity-record system for authorized AUIS IT Department interns and
         administrators.
       </p>

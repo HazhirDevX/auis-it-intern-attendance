@@ -8,7 +8,7 @@ export default function TermsPage() {
   return (
     <LegalPage title="Terms of Use" updated="August 26, 2026">
       <p>
-        By using the AUIS IT Intern Attendance Portal, you agree to use it only
+        By using the AUIS IT Intern Portal, you agree to use it only
         for legitimate AUIS internship attendance and administrative purposes.
       </p>
 
