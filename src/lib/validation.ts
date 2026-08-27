@@ -1,6 +1,10 @@
 import { z } from "zod";
 
-import { AUIS_EMAIL_DOMAIN, MAX_DAILY_HOURS } from "@/lib/constants";
+import {
+  AUIS_EMAIL_DOMAIN,
+  EXTERNAL_GOOGLE_EMAIL_ALLOWLIST,
+  MAX_DAILY_HOURS,
+} from "@/lib/constants";
 
 export const auisEmailSchema = z
   .string()
@@ -63,4 +67,14 @@ export function normalizeAuisEmail(email: string) {
 
 export function isAuisEmail(email: string) {
   return auisEmailSchema.safeParse(email).success;
+}
+
+export function isAllowedGoogleEmail(email: string) {
+  const normalizedEmail = normalizeAuisEmail(email);
+  return (
+    isAuisEmail(normalizedEmail) ||
+    EXTERNAL_GOOGLE_EMAIL_ALLOWLIST.includes(
+      normalizedEmail as (typeof EXTERNAL_GOOGLE_EMAIL_ALLOWLIST)[number],
+    )
+  );
 }

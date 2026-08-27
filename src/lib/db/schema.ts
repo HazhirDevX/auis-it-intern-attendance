@@ -43,7 +43,10 @@ export const users = pgTable(
     uniqueIndex("users_email_unique").on(table.email),
     index("users_role_active_idx").on(table.role, table.active),
     check("users_email_lowercase", sql`${table.email} = lower(${table.email})`),
-    check("users_auis_email", sql`${table.email} like '%@auis.edu.krd'`),
+    check(
+      "users_allowed_email",
+      sql`${table.email} like '%@auis.edu.krd' or ${table.email} = 'hazhir.a.2004@gmail.com'`,
+    ),
   ],
 );
 

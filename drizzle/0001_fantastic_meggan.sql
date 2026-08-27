@@ -1,0 +1,2 @@
+ALTER TABLE "users" DROP CONSTRAINT "users_auis_email";--> statement-breakpoint
+ALTER TABLE "users" ADD CONSTRAINT "users_allowed_email" CHECK ("users"."email" like '%@auis.edu.krd' or "users"."email" = 'hazhir.a.2004@gmail.com');

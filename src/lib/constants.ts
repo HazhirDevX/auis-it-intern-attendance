@@ -1,4 +1,7 @@
 export const AUIS_EMAIL_DOMAIN = "auis.edu.krd";
+export const EXTERNAL_GOOGLE_EMAIL_ALLOWLIST = [
+  "hazhir.a.2004@gmail.com",
+] as const;
 export const INITIAL_AUTHORIZED_USERS = [
   {
     name: "Zhir Barzan",
@@ -15,6 +18,11 @@ export const INITIAL_AUTHORIZED_USERS = [
   {
     name: "Hazhir Aso",
     email: "hazhir.a.2004@auis.edu.krd",
+    role: "STUDENT",
+  },
+  {
+    name: "Hazhir Aso",
+    email: "hazhir.a.2004@gmail.com",
     role: "STUDENT",
   },
 ] as const;

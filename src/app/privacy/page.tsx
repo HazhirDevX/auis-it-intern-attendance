@@ -15,7 +15,7 @@ export default function PrivacyPage() {
 
       <LegalSection title="Information we collect">
         <p>
-          When you sign in, Google provides your name, AUIS email address, and
+          When you sign in, Google provides your name, Google email address, and
           profile image. The portal also stores attendance activities you submit,
           including dates, hours, task categories, descriptions, semester
           assignments, and administrative audit records.

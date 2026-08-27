@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
-import { isAuisEmail, normalizeAuisEmail } from "@/lib/validation";
+import { isAllowedGoogleEmail, normalizeAuisEmail } from "@/lib/validation";
 
 const publicPaths = ["/", "/access-denied", "/privacy", "/terms", "/robots.txt"];
 
@@ -33,7 +33,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       const email = normalizeAuisEmail(profile?.email ?? "");
       const verified = Boolean(profile?.email_verified);
 
-      if (!verified || !isAuisEmail(email)) {
+      if (!verified || !isAllowedGoogleEmail(email)) {
         return "/access-denied?reason=domain";
       }
 

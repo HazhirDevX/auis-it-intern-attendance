@@ -61,7 +61,7 @@ export default async function Home() {
           <div className="mt-5 flex items-center gap-2 text-sm text-slate-400">
             <LockKeyhole className="size-4 text-[#d7b64f]" />
             {oauthConfigured
-              ? "Only registered @auis.edu.krd accounts can enter."
+              ? "Only registered AUIS and explicitly approved Google accounts can enter."
               : "Google OAuth configuration is pending administrator setup."}
           </div>
         </section>

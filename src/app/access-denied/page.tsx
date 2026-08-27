@@ -36,7 +36,7 @@ export default async function AccessDeniedPage({
           </h1>
           <p className="mt-3 text-sm leading-6 text-muted-foreground">
             {domainError
-              ? "This portal only accepts verified @auis.edu.krd Google accounts."
+              ? "This portal only accepts verified AUIS accounts and explicitly approved Google accounts."
               : roleError
                 ? "Your account is authorized, but this page requires an administrator role."
                 : "You successfully entered AUIS territory, but you are not currently registered as an IT intern. Contact the IT Department administrator if you believe this is a mistake."}
@@ -49,7 +49,7 @@ export default async function AccessDeniedPage({
             <p className="mt-1 pl-6 text-muted-foreground">
               {roleError
                 ? "Return to your dashboard or ask an administrator if your assigned role is incorrect."
-                : "Ask an IT Department administrator to add your AUIS email to the authorized intern list."}
+                : "Ask an IT Department administrator to add your email to the authorized intern list."}
             </p>
           </div>
           <Button asChild className="mt-7 w-full">

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   activitySchema,
   auisEmailSchema,
+  isAllowedGoogleEmail,
   internSchema,
   semesterSchema,
 } from "@/lib/validation";
@@ -16,6 +17,13 @@ describe("server input validation", () => {
     expect(auisEmailSchema.safeParse("person@notauis.edu.krd").success).toBe(
       false,
     );
+  });
+
+  it("allows only the explicitly approved personal Google account", () => {
+    expect(isAllowedGoogleEmail("hazhir.a.2004@gmail.com")).toBe(true);
+    expect(isAllowedGoogleEmail("HAZHIR.A.2004@GMAIL.COM")).toBe(true);
+    expect(isAllowedGoogleEmail("person@gmail.com")).toBe(false);
+    expect(isAllowedGoogleEmail("student@auis.edu.krd")).toBe(true);
   });
 
   it("enforces safe activity bounds", () => {
