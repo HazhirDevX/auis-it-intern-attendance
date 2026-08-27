@@ -40,33 +40,35 @@ export async function addInternAction(
     return errorState("That AUIS email is already registered.");
 
   try {
-    await db.transaction(async (tx) => {
-      const [user] = await tx
-        .insert(users)
-        .values({
-          name: parsed.data.name,
-          email: parsed.data.email,
-          role: parsed.data.role,
-          active: true,
-        })
-        .returning({ id: users.id });
+    const userId = crypto.randomUUID();
+    const insertUser = db.insert(users).values({
+      id: userId,
+      name: parsed.data.name,
+      email: parsed.data.email,
+      role: parsed.data.role,
+      active: true,
+    });
+    const insertAudit = db.insert(auditLogs).values({
+      actorUserId: actor.id,
+      action: "INTERN_ADDED",
+      entityType: "USER",
+      entityId: userId,
+      metadata: { email: parsed.data.email, role: parsed.data.role },
+    });
 
-      if (parsed.data.semesterId) {
-        await tx.insert(semesterMemberships).values({
-          userId: user.id,
+    if (parsed.data.semesterId) {
+      await db.batch([
+        insertUser,
+        db.insert(semesterMemberships).values({
+          userId,
           semesterId: parsed.data.semesterId,
           active: true,
-        });
-      }
-
-      await tx.insert(auditLogs).values({
-        actorUserId: actor.id,
-        action: "INTERN_ADDED",
-        entityType: "USER",
-        entityId: user.id,
-        metadata: { email: parsed.data.email, role: parsed.data.role },
-      });
-    });
+        }),
+        insertAudit,
+      ]);
+    } else {
+      await db.batch([insertUser, insertAudit]);
+    }
   } catch (error) {
     console.error("Intern creation failed", error);
     return errorState("The intern could not be added.");
@@ -95,25 +97,29 @@ export async function setInternActiveAction(formData: FormData) {
     .limit(1);
   if (!target) return errorState("Intern not found.");
 
-  await db.transaction(async (tx) => {
-    await tx
-      .update(users)
-      .set({ active, updatedAt: new Date() })
-      .where(eq(users.id, userId));
-    if (!active) {
-      await tx
+  const updateUser = db
+    .update(users)
+    .set({ active, updatedAt: new Date() })
+    .where(eq(users.id, userId));
+  const insertAudit = db.insert(auditLogs).values({
+    actorUserId: actor.id,
+    action: active ? "INTERN_REACTIVATED" : "INTERN_DEACTIVATED",
+    entityType: "USER",
+    entityId: userId,
+    metadata: { email: target.email },
+  });
+  if (active) {
+    await db.batch([updateUser, insertAudit]);
+  } else {
+    await db.batch([
+      updateUser,
+      db
         .update(semesterMemberships)
         .set({ active: false })
-        .where(and(eq(semesterMemberships.userId, userId)));
-    }
-    await tx.insert(auditLogs).values({
-      actorUserId: actor.id,
-      action: active ? "INTERN_REACTIVATED" : "INTERN_DEACTIVATED",
-      entityType: "USER",
-      entityId: userId,
-      metadata: { email: target.email },
-    });
-  });
+        .where(and(eq(semesterMemberships.userId, userId))),
+      insertAudit,
+    ]);
+  }
 
   revalidatePath("/admin/interns");
   revalidatePath("/dashboard");
@@ -136,21 +142,20 @@ export async function setSemesterMembershipAction(formData: FormData) {
   if (!userId || !semesterId)
     return errorState("Intern and semester are required.");
 
-  await db.transaction(async (tx) => {
-    await tx
-      .insert(semesterMemberships)
+  await db.batch([
+    db.insert(semesterMemberships)
       .values({ userId, semesterId, active })
       .onConflictDoUpdate({
         target: [semesterMemberships.userId, semesterMemberships.semesterId],
         set: { active },
-      });
-    await tx.insert(auditLogs).values({
+      }),
+    db.insert(auditLogs).values({
       actorUserId: actor.id,
       action: active ? "INTERN_ASSIGNED" : "INTERN_UNASSIGNED",
       entityType: "SEMESTER_MEMBERSHIP",
       metadata: { userId, semesterId },
-    });
-  });
+    }),
+  ]);
 
   revalidatePath(`/admin/interns/${userId}`);
   revalidatePath("/admin/interns");

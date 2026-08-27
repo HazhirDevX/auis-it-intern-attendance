@@ -42,48 +42,55 @@ export async function createSemesterAction(
   }
 
   try {
-    await db.transaction(async (tx) => {
-      if (parsed.data.activate) {
-        await tx
-          .update(semesters)
-          .set({ status: "ARCHIVED", updatedAt: new Date() })
-          .where(eq(semesters.status, "ACTIVE"));
-      }
-
-      const [semester] = await tx
-        .insert(semesters)
-        .values({
-          name: parsed.data.name,
-          startDate: parsed.data.startDate,
-          endDate: parsed.data.endDate,
-          targetHours: parsed.data.targetHours,
-          status: parsed.data.activate ? "ACTIVE" : "DRAFT",
-          createdBy: actor.id,
-        })
-        .returning({ id: semesters.id });
-
-      if (parsed.data.internIds.length) {
-        await tx.insert(semesterMemberships).values(
+    const semesterId = crypto.randomUUID();
+    const insertSemester = db.insert(semesters).values({
+      id: semesterId,
+      name: parsed.data.name,
+      startDate: parsed.data.startDate,
+      endDate: parsed.data.endDate,
+      targetHours: parsed.data.targetHours,
+      status: parsed.data.activate ? "ACTIVE" : "DRAFT",
+      createdBy: actor.id,
+    });
+    const insertAudit = db.insert(auditLogs).values({
+      actorUserId: actor.id,
+      action: "SEMESTER_CREATED",
+      entityType: "SEMESTER",
+      entityId: semesterId,
+      metadata: {
+        name: parsed.data.name,
+        active: parsed.data.activate,
+        internCount: parsed.data.internIds.length,
+      },
+    });
+    const insertMemberships = parsed.data.internIds.length
+      ? db.insert(semesterMemberships).values(
           parsed.data.internIds.map((userId) => ({
             userId,
-            semesterId: semester.id,
+            semesterId,
             active: true,
           })),
-        );
-      }
+        )
+      : null;
+    const archiveActive = db
+      .update(semesters)
+      .set({ status: "ARCHIVED", updatedAt: new Date() })
+      .where(eq(semesters.status, "ACTIVE"));
 
-      await tx.insert(auditLogs).values({
-        actorUserId: actor.id,
-        action: "SEMESTER_CREATED",
-        entityType: "SEMESTER",
-        entityId: semester.id,
-        metadata: {
-          name: parsed.data.name,
-          active: parsed.data.activate,
-          internCount: parsed.data.internIds.length,
-        },
-      });
-    });
+    if (parsed.data.activate && insertMemberships) {
+      await db.batch([
+        archiveActive,
+        insertSemester,
+        insertMemberships,
+        insertAudit,
+      ]);
+    } else if (parsed.data.activate) {
+      await db.batch([archiveActive, insertSemester, insertAudit]);
+    } else if (insertMemberships) {
+      await db.batch([insertSemester, insertMemberships, insertAudit]);
+    } else {
+      await db.batch([insertSemester, insertAudit]);
+    }
   } catch (error) {
     console.error("Semester creation failed", error);
     return errorState(
@@ -101,25 +108,28 @@ export async function activateSemesterAction(formData: FormData) {
     return errorState("Admin access required.");
   const semesterId = String(formData.get("semesterId") ?? "");
 
-  await db.transaction(async (tx) => {
-    await tx
-      .update(semesters)
+  const [target] = await db
+    .select({ id: semesters.id, name: semesters.name })
+    .from(semesters)
+    .where(eq(semesters.id, semesterId))
+    .limit(1);
+  if (!target) return errorState("Semester not found.");
+
+  await db.batch([
+    db.update(semesters)
       .set({ status: "ARCHIVED", updatedAt: new Date() })
-      .where(eq(semesters.status, "ACTIVE"));
-    const [updated] = await tx
-      .update(semesters)
+      .where(eq(semesters.status, "ACTIVE")),
+    db.update(semesters)
       .set({ status: "ACTIVE", updatedAt: new Date() })
-      .where(eq(semesters.id, semesterId))
-      .returning({ id: semesters.id, name: semesters.name });
-    if (!updated) throw new Error("Semester not found");
-    await tx.insert(auditLogs).values({
+      .where(eq(semesters.id, semesterId)),
+    db.insert(auditLogs).values({
       actorUserId: actor.id,
       action: "SEMESTER_ACTIVATED",
       entityType: "SEMESTER",
-      entityId: updated.id,
-      metadata: { name: updated.name },
-    });
-  });
+      entityId: target.id,
+      metadata: { name: target.name },
+    }),
+  ]);
 
   refreshSemesterViews();
   return {
@@ -135,19 +145,24 @@ export async function archiveSemesterAction(formData: FormData) {
   const semesterId = String(formData.get("semesterId") ?? "");
 
   const [semester] = await db
-    .update(semesters)
-    .set({ status: "ARCHIVED", updatedAt: new Date() })
+    .select({ id: semesters.id, name: semesters.name })
+    .from(semesters)
     .where(eq(semesters.id, semesterId))
-    .returning({ id: semesters.id, name: semesters.name });
+    .limit(1);
   if (!semester) return errorState("Semester not found.");
 
-  await db.insert(auditLogs).values({
-    actorUserId: actor.id,
-    action: "SEMESTER_ARCHIVED",
-    entityType: "SEMESTER",
-    entityId: semester.id,
-    metadata: { name: semester.name },
-  });
+  await db.batch([
+    db.update(semesters)
+      .set({ status: "ARCHIVED", updatedAt: new Date() })
+      .where(eq(semesters.id, semesterId)),
+    db.insert(auditLogs).values({
+      actorUserId: actor.id,
+      action: "SEMESTER_ARCHIVED",
+      entityType: "SEMESTER",
+      entityId: semester.id,
+      metadata: { name: semester.name },
+    }),
+  ]);
 
   refreshSemesterViews();
   return {

@@ -54,26 +54,25 @@ export async function createActivityAction(
   }
 
   try {
-    await db.transaction(async (tx) => {
-      const [activity] = await tx
-        .insert(activities)
-        .values({
-          userId: actor.id,
-          semesterId: semester.id,
-          workDate: parsed.data.workDate,
-          hours: parsed.data.hours,
-          description: parsed.data.description,
-          createdBy: actor.id,
-        })
-        .returning({ id: activities.id });
-      await tx.insert(auditLogs).values({
+    const activityId = crypto.randomUUID();
+    await db.batch([
+      db.insert(activities).values({
+        id: activityId,
+        userId: actor.id,
+        semesterId: semester.id,
+        workDate: parsed.data.workDate,
+        hours: parsed.data.hours,
+        description: parsed.data.description,
+        createdBy: actor.id,
+      }),
+      db.insert(auditLogs).values({
         actorUserId: actor.id,
         action: "ACTIVITY_CREATED",
         entityType: "ACTIVITY",
-        entityId: activity.id,
+        entityId: activityId,
         metadata: { semesterId: semester.id, hours: parsed.data.hours },
-      });
-    });
+      }),
+    ]);
   } catch (error) {
     console.error("Activity creation failed", error);
     return errorState("The activity could not be saved. Please try again.");
@@ -137,9 +136,8 @@ export async function updateActivityAction(
   }
 
   try {
-    await db.transaction(async (tx) => {
-      await tx
-        .update(activities)
+    await db.batch([
+      db.update(activities)
         .set({
           workDate: parsed.data.workDate,
           hours: parsed.data.hours,
@@ -147,8 +145,8 @@ export async function updateActivityAction(
           lastEditedBy: actor.id,
           updatedAt: new Date(),
         })
-        .where(eq(activities.id, parsed.data.id));
-      await tx.insert(auditLogs).values({
+        .where(eq(activities.id, parsed.data.id)),
+      db.insert(auditLogs).values({
         actorUserId: actor.id,
         action: "ACTIVITY_UPDATED",
         entityType: "ACTIVITY",
@@ -161,8 +159,8 @@ export async function updateActivityAction(
           },
           after: parsed.data,
         },
-      });
-    });
+      }),
+    ]);
   } catch (error) {
     console.error("Activity update failed", error);
     return errorState("The activity could not be updated.");
@@ -196,18 +194,16 @@ export async function deleteActivityAction(
   }
 
   try {
-    await db.transaction(async (tx) => {
-      await tx.insert(auditLogs).values({
+    await db.batch([
+      db.insert(auditLogs).values({
         actorUserId: actor.id,
         action: "ACTIVITY_DELETED",
         entityType: "ACTIVITY",
         entityId: existing.activity.id,
         metadata: { deletedRecord: existing.activity },
-      });
-      await tx
-        .delete(activities)
-        .where(eq(activities.id, existing.activity.id));
-    });
+      }),
+      db.delete(activities).where(eq(activities.id, existing.activity.id)),
+    ]);
   } catch (error) {
     console.error("Activity deletion failed", error);
     return errorState("The activity could not be deleted.");
