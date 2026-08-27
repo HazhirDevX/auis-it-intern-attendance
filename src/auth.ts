@@ -6,7 +6,14 @@ import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { isAllowedGoogleEmail, normalizeAuisEmail } from "@/lib/validation";
 
-const publicPaths = ["/", "/access-denied", "/privacy", "/terms", "/robots.txt"];
+const publicPaths = [
+  "/",
+  "/access-denied",
+  "/privacy",
+  "/terms",
+  "/robots.txt",
+  "/manifest.webmanifest",
+];
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
