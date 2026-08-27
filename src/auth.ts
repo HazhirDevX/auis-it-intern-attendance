@@ -13,7 +13,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     Google({
       authorization: {
         params: {
-          hd: "auis.edu.krd",
           prompt: "select_account",
         },
       },
