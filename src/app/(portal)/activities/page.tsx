@@ -26,7 +26,7 @@ function pageHref(params: Params, page: number) {
   for (const [key, value] of Object.entries(params))
     if (value) next.set(key, value);
   next.set("page", String(page));
-  return `/activities?${next.toString()}`;
+  return `/?view=activities&${next.toString()}`;
 }
 
 export default async function ActivitiesPage({
@@ -68,7 +68,7 @@ export default async function ActivitiesPage({
         }
         action={
           <Button asChild>
-            <Link href="/log-hours">
+            <Link href="/?view=log-hours">
               <Plus className="size-4" />
               Log hours
             </Link>

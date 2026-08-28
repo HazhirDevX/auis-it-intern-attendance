@@ -67,7 +67,7 @@ export default async function LogHoursPage() {
         description="Great interns log their work. Legendary interns remember what they did."
         action={
           <Button asChild variant="outline">
-            <Link href="/activities">
+            <Link href="/?view=history">
               <History className="size-4" />
               View history
             </Link>

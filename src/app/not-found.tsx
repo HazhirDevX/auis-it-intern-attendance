@@ -14,7 +14,7 @@ export default function NotFound() {
           That portal page is outside the known IT universe.
         </p>
         <Button asChild className="mt-6">
-          <Link href="/dashboard">Return to dashboard</Link>
+          <Link href="/?view=dashboard">Return to dashboard</Link>
         </Button>
       </div>
     </main>

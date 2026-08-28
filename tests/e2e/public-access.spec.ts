@@ -23,6 +23,13 @@ test("shows clear unauthorized-user guidance", async ({ page }) => {
   ).toBeVisible();
 });
 
+test("redirects legacy page paths to the root workspace URL", async ({ request }) => {
+  const response = await request.fetch("/dashboard", { maxRedirects: 0 });
+
+  expect(response.status()).toBe(307);
+  expect(response.headers()["location"]).toBe("/?view=dashboard");
+});
+
 for (const width of [375, 768, 1024, 1440]) {
   test(`login page fits a ${width}px viewport`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });

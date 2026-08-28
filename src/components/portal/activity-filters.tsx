@@ -153,7 +153,7 @@ export function ActivityFilters({
           <Button
             variant="ghost"
             className="w-full"
-            onClick={() => router.push(pathname)}
+            onClick={() => router.push(`${pathname}?view=activities`)}
           >
             Clear filters
           </Button>

@@ -18,7 +18,7 @@ import { Card, CardContent } from "@/components/ui/card";
 
 export default async function Home() {
   const user = await getCurrentUser();
-  if (user) redirect("/dashboard");
+  if (user) redirect("/?view=dashboard");
   const oauthConfigured = Boolean(
     process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET,
   );

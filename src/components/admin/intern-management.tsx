@@ -205,7 +205,7 @@ export function InternTable({ interns }: { interns: Intern[] }) {
                 </TableCell>
                 <TableCell className="text-right">
                   <Button asChild variant="ghost" size="sm">
-                    <Link href={`/admin/interns/${intern.id}`}>
+                    <Link href={`/?view=intern&intern=${intern.id}`}>
                       <Eye className="size-4" />
                       View
                     </Link>

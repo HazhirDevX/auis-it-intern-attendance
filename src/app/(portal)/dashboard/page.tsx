@@ -101,7 +101,7 @@ export default async function DashboardPage() {
             <CardHeader className="flex-row items-center justify-between">
               <CardTitle className="text-lg">Intern progress</CardTitle>
               <Button asChild variant="ghost" size="sm">
-                <Link href="/admin/interns">
+                <Link href="/?view=interns">
                   Manage interns
                   <ArrowRight className="size-4" />
                 </Link>
@@ -208,7 +208,7 @@ export default async function DashboardPage() {
         description={`${semester.name} · Another productive day in the IT universe.`}
         action={
           <Button asChild>
-            <Link href="/log-hours">
+            <Link href="/?view=log-hours">
               Log today’s hours
               <ArrowRight className="size-4" />
             </Link>
@@ -241,7 +241,7 @@ export default async function DashboardPage() {
         <CardHeader className="flex-row items-center justify-between">
           <CardTitle className="text-lg">Latest activity</CardTitle>
           <Button asChild variant="ghost" size="sm">
-            <Link href="/activities">
+            <Link href="/?view=history">
               View history
               <ArrowRight className="size-4" />
             </Link>

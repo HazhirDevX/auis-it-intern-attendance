@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import {
   Activity,
   BarChart3,
@@ -40,17 +40,22 @@ type ShellUser = {
 };
 
 const studentLinks = [
-  { href: "/log-hours", label: "Log Hours", icon: ClipboardPenLine },
-  { href: "/analytics", label: "Analytics", icon: BarChart3 },
-  { href: "/activities", label: "Activities", icon: Activity },
+  { view: "log-hours", label: "Log Hours", icon: ClipboardPenLine },
+  { view: "analytics", label: "Analytics", icon: BarChart3 },
+  { view: "activities", label: "Activities", icon: Activity },
+  { view: "history", label: "History", icon: FileClock },
 ];
 
 const adminLinks = [
-  { href: "/admin/interns", label: "Interns", icon: Users },
-  { href: "/admin/semesters", label: "Semesters", icon: GraduationCap },
-  { href: "/admin/export", label: "Excel Export", icon: Download },
-  { href: "/admin/audit", label: "Audit History", icon: FileClock },
+  { view: "interns", label: "Interns", icon: Users },
+  { view: "semesters", label: "Semesters", icon: GraduationCap },
+  { view: "export", label: "Excel Export", icon: Download },
+  { view: "audit", label: "Audit History", icon: FileClock },
 ];
+
+function viewHref(view: string) {
+  return `/?view=${view}`;
+}
 
 function initials(name: string) {
   return name
@@ -68,11 +73,12 @@ function Navigation({
   user: ShellUser;
   mobile?: boolean;
 }) {
-  const pathname = usePathname();
-  const navClass = (href: string) =>
+  const searchParams = useSearchParams();
+  const activeView = searchParams.get("view") ?? "dashboard";
+  const navClass = (view: string) =>
     cn(
       "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-      pathname === href || pathname.startsWith(`${href}/`)
+      activeView === view
         ? "bg-sidebar-accent text-white shadow-sm"
         : "text-slate-300 hover:bg-white/5 hover:text-white",
     );
@@ -85,7 +91,7 @@ function Navigation({
       )}
     >
       <Link
-        href="/dashboard"
+        href={viewHref("dashboard")}
         className="block px-1 py-1"
         aria-label="Portal dashboard"
       >
@@ -103,15 +109,15 @@ function Navigation({
       </Link>
 
       <nav className="mt-8 space-y-1" aria-label="Student navigation">
-        <Link href="/dashboard" className={navClass("/dashboard")}>
+        <Link href={viewHref("dashboard")} className={navClass("dashboard")}>
           <LayoutDashboard className="size-4" />
           Overview
         </Link>
         {studentLinks.map((link) => (
           <Link
-            key={link.href}
-            href={link.href}
-            className={navClass(link.href)}
+            key={link.view}
+            href={viewHref(link.view)}
+            className={navClass(link.view)}
           >
             <link.icon className="size-4" />
             {link.label}
@@ -128,9 +134,9 @@ function Navigation({
           <nav className="mt-2 space-y-1" aria-label="Admin navigation">
             {adminLinks.map((link) => (
               <Link
-                key={link.href}
-                href={link.href}
-                className={navClass(link.href)}
+                key={link.view}
+                href={viewHref(link.view)}
+                className={navClass(link.view)}
               >
                 <link.icon className="size-4" />
                 {link.label}
@@ -192,7 +198,7 @@ export function PortalShell({
 
       <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b bg-white/90 px-4 backdrop-blur lg:hidden">
         <Link
-          href="/dashboard"
+          href={viewHref("dashboard")}
           className="flex items-center gap-2 font-semibold text-primary"
         >
           <Image
