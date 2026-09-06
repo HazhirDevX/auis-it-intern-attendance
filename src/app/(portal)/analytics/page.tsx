@@ -1,13 +1,12 @@
 import { Activity, Clock3, Gauge, Target, TrendingUp } from "lucide-react";
 
-import {
-  AnalyticsCharts,
-  InternComparisonChart,
-} from "@/components/portal/analytics-charts";
+import { InternComparisonChart } from "@/components/portal/analytics-charts";
 import { AdminAnalyticsFilters } from "@/components/admin/analytics-filters";
 import { MetricCard } from "@/components/portal/metric-card";
 import { PageHeader } from "@/components/portal/page-header";
-import { ProgressCard } from "@/components/portal/progress-card";
+import { PeriodProgress } from "@/components/portal/period-progress";
+import { InsightsWorkspace } from "@/components/portal/insights-workspace";
+import { localDateString } from "@/lib/dates";
 import { SemesterPicker } from "@/components/portal/semester-picker";
 import {
   getAllSemesters,
@@ -51,9 +50,10 @@ export default async function AnalyticsPage({
   }
 
   if (user.role === "ADMIN") {
-    const [progress, interns] = await Promise.all([
+    const [progress, interns, departmentSeries] = await Promise.all([
       getInternProgress(selected.id),
       getInterns(),
+      getHoursSeries(null, selected.id),
     ]);
     const selectedIntern = params.intern
       ? await getInternDetail(params.intern, selected.id)
@@ -99,7 +99,11 @@ export default async function AnalyticsPage({
             />
           </div>
           <div className="mt-6">
-            <AnalyticsCharts data={selectedIntern.series} target={target} />
+            <InsightsWorkspace
+              data={selectedIntern.series}
+              semester={selected}
+              today={localDateString()}
+            />
           </div>
         </>
       );
@@ -146,6 +150,22 @@ export default async function AnalyticsPage({
             icon={TrendingUp}
           />
         </div>
+        <InsightsWorkspace
+          data={departmentSeries}
+          semester={{
+            ...selected,
+            targetHours: selected.targetHours * progress.length,
+            weeklyTargetHours:
+              selected.weeklyTargetHours == null
+                ? null
+                : selected.weeklyTargetHours * progress.length,
+            monthlyTargetHours:
+              selected.monthlyTargetHours == null
+                ? null
+                : selected.monthlyTargetHours * progress.length,
+          }}
+          today={localDateString()}
+        />
         <div className="mt-6">
           <InternComparisonChart
             data={progress.map((item) => ({
@@ -164,7 +184,6 @@ export default async function AnalyticsPage({
     getUserMetrics(user.id, selected.id),
     getHoursSeries(user.id, selected.id),
   ]);
-  const target = Number(selected.targetHours);
   return (
     <>
       <PageHeader
@@ -177,35 +196,12 @@ export default async function AnalyticsPage({
         }
         action={<SemesterPicker semesters={semesters} value={selected.id} />}
       />
-      <ProgressCard
-        hours={metrics.totalHours}
-        target={target}
-        semesterName={selected.name}
+      <PeriodProgress semester={selected} metrics={metrics} />
+      <InsightsWorkspace
+        data={series}
+        semester={selected}
+        today={localDateString()}
       />
-      <div className="my-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard
-          label="Remaining"
-          value={`${Math.max(0, target - metrics.totalHours).toFixed(1)} hrs`}
-          icon={Target}
-        />
-        <MetricCard
-          label="Activities"
-          value={String(metrics.activityCount)}
-          icon={Activity}
-        />
-        <MetricCard
-          label="Average activity"
-          value={`${metrics.averageHours.toFixed(1)} hrs`}
-          icon={Gauge}
-        />
-        <MetricCard
-          label="This month"
-          value={`${metrics.monthHours.toFixed(1)} hrs`}
-          helper={`${metrics.weekHours.toFixed(1)} this week`}
-          icon={Clock3}
-        />
-      </div>
-      <AnalyticsCharts data={series} target={target} />
     </>
   );
 }

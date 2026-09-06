@@ -15,6 +15,20 @@
       "when": 1787812660795,
       "tag": "0001_fantastic_meggan",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788695838939,
+      "tag": "0002_strong_rocket_racer",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1788696692966,
+      "tag": "0003_boring_firelord",
+      "breakpoints": true
     }
   ]
 }

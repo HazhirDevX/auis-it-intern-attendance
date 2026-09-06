@@ -6,6 +6,7 @@ const legacyViewRoutes: Record<string, string> = {
   "/dashboard": "dashboard",
   "/log-hours": "log-hours",
   "/activities": "activities",
+  "/history": "history",
   "/analytics": "analytics",
   "/admin/interns": "interns",
   "/admin/semesters": "semesters",

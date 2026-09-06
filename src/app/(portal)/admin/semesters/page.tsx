@@ -19,12 +19,17 @@ export default async function SemestersPage() {
         title="Semester management"
         description="Start each cohort at zero while keeping every historical activity intact."
       />
-      <CreateSemesterForm
-        interns={interns
-          .filter((item) => item.active)
-          .map(({ id, name, email }) => ({ id, name, email }))}
-      />
       <SemesterCards semesters={semesters} />
+      <details className="mt-6 rounded-xl border bg-white p-5">
+        <summary className="cursor-pointer py-2 font-semibold">
+          Create a new semester
+        </summary>
+        <CreateSemesterForm
+          interns={interns
+            .filter((item) => item.active && item.role === "STUDENT")
+            .map(({ id, name, email }) => ({ id, name, email }))}
+        />
+      </details>
     </>
   );
 }

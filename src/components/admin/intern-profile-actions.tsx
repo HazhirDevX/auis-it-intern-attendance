@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "sonner";
 import { UserCheck, UserX } from "lucide-react";
 
 import {
@@ -55,7 +56,9 @@ export function InternAccessButton({
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <form
             action={async (formData) => {
-              await setInternActiveAction(formData);
+              const result = await setInternActiveAction(formData);
+              if (result.status === "error") toast.error(result.message);
+              else toast.success(result.message);
             }}
           >
             <input type="hidden" name="userId" value={userId} />
@@ -80,7 +83,9 @@ export function MembershipButton({
   return (
     <form
       action={async (formData) => {
-        await setSemesterMembershipAction(formData);
+        const result = await setSemesterMembershipAction(formData);
+        if (result.status === "error") toast.error(result.message);
+        else toast.success(result.message);
       }}
     >
       <input type="hidden" name="userId" value={userId} />

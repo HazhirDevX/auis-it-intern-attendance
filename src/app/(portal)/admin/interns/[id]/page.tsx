@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { Activity, Clock3, Mail, Target } from "lucide-react";
+import { localDateString } from "@/lib/dates";
 
 import {
   InternAccessButton,
@@ -9,8 +9,8 @@ import {
   ActivityList,
   type ActivityListItem,
 } from "@/components/portal/activity-list";
-import { AnalyticsCharts } from "@/components/portal/analytics-charts";
-import { MetricCard } from "@/components/portal/metric-card";
+import { InsightsWorkspace } from "@/components/portal/insights-workspace";
+import { PeriodProgress } from "@/components/portal/period-progress";
 import { PageHeader } from "@/components/portal/page-header";
 import { SemesterPicker } from "@/components/portal/semester-picker";
 import { Badge } from "@/components/ui/badge";
@@ -47,7 +47,6 @@ export default async function InternDetailPage({
     createdAt: item.createdAt.toISOString(),
     updatedAt: item.updatedAt.toISOString(),
   }));
-  const target = Number(selected.targetHours);
   return (
     <>
       <PageHeader
@@ -77,32 +76,12 @@ export default async function InternDetailPage({
           active={Boolean(membership?.active)}
         />
       </div>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard
-          label="Total hours"
-          value={detail.metrics.totalHours.toFixed(1)}
-          icon={Clock3}
-          accent
-        />
-        <MetricCard
-          label="Target"
-          value={`${target.toFixed(0)} hrs`}
-          icon={Target}
-        />
-        <MetricCard
-          label="Activities"
-          value={String(detail.metrics.activityCount)}
-          icon={Activity}
-        />
-        <MetricCard
-          label="Average entry"
-          value={`${detail.metrics.averageHours.toFixed(1)} hrs`}
-          icon={Mail}
-        />
-      </div>
-      <div className="mt-6">
-        <AnalyticsCharts data={detail.series} target={target} />
-      </div>
+      <PeriodProgress semester={selected} metrics={detail.metrics} />
+      <InsightsWorkspace
+        data={detail.series}
+        semester={selected}
+        today={localDateString()}
+      />
       <Card className="mt-6 border-0 bg-transparent shadow-none">
         <CardHeader className="px-0">
           <CardTitle className="text-lg">Activity history</CardTitle>

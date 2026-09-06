@@ -2,7 +2,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function PortalLoading() {
   return (
-    <div className="space-y-6" aria-label="Loading portal data">
+    <div className="space-y-6" aria-label="Loading portal data" role="status" aria-busy="true">
+      <p className="font-mono text-xs text-muted-foreground">Syncing your internship workspace…</p>
       <div className="space-y-3">
         <Skeleton className="h-4 w-28" />
         <Skeleton className="h-10 w-80 max-w-full" />

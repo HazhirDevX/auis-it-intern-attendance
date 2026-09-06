@@ -20,11 +20,20 @@ export default async function ExportPage() {
       <PageHeader
         eyebrow="Reporting"
         title="Excel export"
-        description="Download a genuine .xlsx workbook with styled Activities and Intern Summary sheets."
+        description="Choose a semester to download its activities and intern summary. Exports include the full semester history, not just the current page."
       />
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="space-y-4">
+        {!semesters.length && (
+          <p className="rounded-xl border border-dashed p-8 text-sm text-muted-foreground">
+            No semesters to export yet. Create a semester to start collecting
+            activities.
+          </p>
+        )}
         {semesters.map((semester) => (
-          <Card key={semester.id} className="shadow-sm">
+          <Card
+            key={semester.id}
+            className="shadow-sm sm:flex sm:flex-row sm:items-center sm:justify-between"
+          >
             <CardHeader>
               <div className="flex items-start gap-3">
                 <div className="rounded-xl bg-[#c4981b]/10 p-2.5 text-[#a57c10]">
@@ -40,7 +49,7 @@ export default async function ExportPage() {
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="sm:pt-6">
               <Button asChild>
                 <a href={`/api/export?semester=${semester.id}`}>
                   <Download className="size-4" />

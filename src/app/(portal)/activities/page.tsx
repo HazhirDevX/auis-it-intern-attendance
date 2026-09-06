@@ -12,6 +12,7 @@ import { getActivitiesPage, getAllSemesters, getInterns } from "@/data/portal";
 import { requireUser } from "@/lib/auth/dal";
 
 type Params = {
+  view?: string;
   semester?: string;
   intern?: string;
   search?: string;
@@ -26,7 +27,8 @@ function pageHref(params: Params, page: number) {
   for (const [key, value] of Object.entries(params))
     if (value) next.set(key, value);
   next.set("page", String(page));
-  return `/?view=activities&${next.toString()}`;
+  next.set("view", "activities");
+  return `/?${next.toString()}`;
 }
 
 export default async function ActivitiesPage({

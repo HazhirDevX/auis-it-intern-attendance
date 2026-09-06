@@ -139,6 +139,72 @@
 }
 
 @layer utilities {
+  .digital-background {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.36;
+    background-image: radial-gradient(#0b254525 0.7px, transparent 0.7px);
+    background-size: 22px 22px;
+    mask-image: radial-gradient(
+      350px circle at var(--pointer-x, 90%) var(--pointer-y, 10%),
+      #000,
+      transparent
+    );
+  }
+  .portal-frame [data-slot="card"] {
+    box-shadow: none;
+    border-color: #0b254512;
+  }
+  .portal-frame [data-slot="button"] {
+    min-height: 40px;
+  }
+  .portal-frame input:not([type="checkbox"]),
+  .portal-frame select {
+    min-height: 42px;
+  }
+  .portal-frame h1 {
+    font-size: clamp(1.8rem, 3vw, 2.7rem);
+    letter-spacing: -0.05em;
+  }
+  .portal-frame nav a {
+    min-height: 44px;
+  }
+  .portal-frame nav a:focus-visible {
+    outline: 2px solid #c4981b;
+    outline-offset: 2px;
+  }
+  .progress-workspace {
+    box-shadow: 0 8px 32px #0b254506;
+  }
+  .portal-frame [data-slot="button"] {
+    transition:
+      background-color 160ms ease,
+      transform 160ms ease,
+      box-shadow 160ms ease;
+  }
+  .portal-frame [data-slot="button"]:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+  .portal-frame main > div > header > div > p:first-child {
+    font-family: var(--font-geist-mono), monospace;
+  }
+  .portal-frame main > div > header > div > p:first-child::before {
+    content: "";
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    margin-right: 8px;
+    background: #c4981b;
+    box-shadow:
+      7px 0 #c4981b55,
+      0 -7px #c4981b55;
+  }
+  [data-slot="dialog-content"],
+  [data-slot="alert-dialog-content"] {
+    max-height: calc(100dvh - 32px);
+    overflow-y: auto;
+  }
   .text-balance {
     text-wrap: balance;
   }
@@ -150,6 +216,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .digital-background {
+    display: none;
+  }
   *,
   *::before,
   *::after {

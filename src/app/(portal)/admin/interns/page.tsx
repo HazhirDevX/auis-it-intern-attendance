@@ -20,9 +20,14 @@ export default async function InternsPage() {
       <PageHeader
         eyebrow="Access management"
         title="Authorized interns"
-        description="Only people on this list can pass the second authentication gate."
+        description="Manage approved accounts, semester assignments, and access. Deactivation preserves every activity."
       />
-      <AddInternForm semesters={semesters} />
+      <details className="rounded-xl border bg-white p-5">
+        <summary className="cursor-pointer py-2 font-semibold">
+          Add an authorized intern
+        </summary>
+        <AddInternForm semesters={semesters} />
+      </details>
       <InternTable
         interns={interns.map((intern) => ({
           ...intern,

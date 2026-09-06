@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { z } from "zod";
 
 import { getExportData } from "@/data/portal";
 import { getCurrentUser } from "@/lib/auth/dal";
@@ -16,6 +17,8 @@ export async function GET(request: NextRequest) {
   const semesterId = request.nextUrl.searchParams.get("semester");
   if (!semesterId)
     return Response.json({ error: "Semester is required." }, { status: 400 });
+  if (!z.uuid().safeParse(semesterId).success)
+    return Response.json({ error: "Invalid semester." }, { status: 400 });
   const data = await getExportData(semesterId);
   if (!data)
     return Response.json({ error: "Semester not found." }, { status: 404 });

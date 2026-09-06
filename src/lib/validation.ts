@@ -49,17 +49,25 @@ export const semesterSchema = z
     name: z.string().trim().min(3, "Enter a semester name.").max(120),
     startDate: z.iso.date("Choose a valid start date."),
     endDate: z.iso.date("Choose a valid end date."),
-    targetHours: z.coerce
-      .number()
-      .positive("Target hours must be greater than zero.")
-      .max(1000, "Target hours must be 1,000 or less."),
+    weeklyTargetHours: z.coerce.number().positive().max(84),
+    monthlyTargetHours: z.coerce.number().positive().max(372),
+    targetBasis: z.enum(["WEEKLY", "MONTHLY"]).default("WEEKLY"),
     activate: z.coerce.boolean().default(false),
     internIds: z.array(z.uuid()).default([]),
   })
   .refine((value) => value.endDate >= value.startDate, {
     path: ["endDate"],
     message: "End date cannot be before the start date.",
-  });
+  })
+  .refine(
+    (value) =>
+      Number(value.endDate.slice(0, 4)) - Number(value.startDate.slice(0, 4)) <=
+      2,
+    {
+      path: ["endDate"],
+      message: "A semester cannot span more than two years.",
+    },
+  );
 
 export function normalizeAuisEmail(email: string) {
   return email.trim().toLowerCase();

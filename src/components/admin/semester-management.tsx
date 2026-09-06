@@ -5,6 +5,7 @@ import { Archive, GraduationCap, Play, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 import { createSemesterAction } from "@/actions/semesters";
+import { updateSemesterTargetsAction } from "@/actions/semesters";
 import {
   activateSemesterAction,
   archiveSemesterAction,
@@ -29,6 +30,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { formatDisplayDate } from "@/lib/dates";
+import { TargetFields } from "@/components/portal/target-fields";
 
 export function CreateSemesterForm({
   interns,
@@ -64,31 +66,7 @@ export function CreateSemesterForm({
                 required
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="semester-start">Start date</Label>
-              <Input
-                id="semester-start"
-                name="startDate"
-                type="date"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="semester-end">End date</Label>
-              <Input id="semester-end" name="endDate" type="date" required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="semester-target">Required hours</Label>
-              <Input
-                id="semester-target"
-                name="targetHours"
-                type="number"
-                min="1"
-                step="0.5"
-                defaultValue="120"
-                required
-              />
-            </div>
+            <TargetFields />
           </div>
           <div>
             <p className="text-sm font-medium">Assign active interns</p>
@@ -127,6 +105,21 @@ export function CreateSemesterForm({
             <GraduationCap className="size-4" />
             Create semester
           </SubmitButton>
+          {state.message && (
+            <p
+              role="status"
+              className={
+                state.status === "error"
+                  ? "text-sm text-destructive"
+                  : "text-sm text-emerald-800"
+              }
+            >
+              {state.message}{" "}
+              {Object.values(state.errors ?? {})
+                .flat()
+                .join(" ")}
+            </p>
+          )}
         </form>
       </CardContent>
     </Card>
@@ -139,6 +132,9 @@ type SemesterRow = {
   startDate: string;
   endDate: string;
   targetHours: number;
+  weeklyTargetHours?: number | null;
+  monthlyTargetHours?: number | null;
+  targetBasis?: string | null;
   status: "DRAFT" | "ACTIVE" | "ARCHIVED";
   memberCount: number;
 };
@@ -177,6 +173,11 @@ export function SemesterCards({ semesters }: { semesters: SemesterRow[] }) {
               </p>
             </div>
             <div className="mt-5 flex flex-wrap gap-2">
+              <p className="w-full text-xs text-muted-foreground">
+                {semester.targetBasis
+                  ? `${semester.weeklyTargetHours} hrs/week · ${semester.monthlyTargetHours} hrs/month · Total calculated from ${semester.targetBasis.toLowerCase()} target`
+                  : "Legacy semester · original total preserved · weekly/monthly targets not configured"}
+              </p>
               {semester.status !== "ACTIVE" && (
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
@@ -199,7 +200,10 @@ export function SemesterCards({ semesters }: { semesters: SemesterRow[] }) {
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
                       <form
                         action={async (formData) => {
-                          await activateSemesterAction(formData);
+                          const result = await activateSemesterAction(formData);
+                          if (result.status === "error")
+                            toast.error(result.message);
+                          else toast.success(result.message);
                         }}
                       >
                         <input
@@ -237,7 +241,10 @@ export function SemesterCards({ semesters }: { semesters: SemesterRow[] }) {
                       <AlertDialogCancel>Keep active</AlertDialogCancel>
                       <form
                         action={async (formData) => {
-                          await archiveSemesterAction(formData);
+                          const result = await archiveSemesterAction(formData);
+                          if (result.status === "error")
+                            toast.error(result.message);
+                          else toast.success(result.message);
                         }}
                       >
                         <input
@@ -254,9 +261,50 @@ export function SemesterCards({ semesters }: { semesters: SemesterRow[] }) {
                 </AlertDialog>
               )}
             </div>
+            {semester.status !== "ARCHIVED" && (
+              <details className="mt-5 border-t pt-4">
+                <summary className="cursor-pointer py-2 text-sm font-medium">
+                  Edit dates & target settings
+                </summary>
+                <EditTargetForm semester={semester} />
+              </details>
+            )}
           </CardContent>
         </Card>
       ))}
     </div>
+  );
+}
+
+function EditTargetForm({ semester }: { semester: SemesterRow }) {
+  const [state, action] = useActionState(
+    updateSemesterTargetsAction,
+    initialActionState,
+  );
+  return (
+    <form action={action} className="mt-4 space-y-4">
+      <input type="hidden" name="semesterId" value={semester.id} />
+      <input type="hidden" name="name" value={semester.name} />
+      <TargetFields initial={semester} />
+      <p className="text-xs text-muted-foreground">
+        Saving explicitly replaces the current {semester.targetHours}-hour
+        target with the calculated total above. Existing activities remain
+        intact and the prior settings are recorded in Audit History.
+      </p>
+      <SubmitButton pendingLabel="Saving settings…">
+        Save target settings
+      </SubmitButton>
+      {state.message && (
+        <p
+          role="status"
+          className={`text-sm ${state.status === "error" ? "text-destructive" : "text-emerald-800"}`}
+        >
+          {state.message}{" "}
+          {Object.values(state.errors ?? {})
+            .flat()
+            .join(" ")}
+        </p>
+      )}
+    </form>
   );
 }

@@ -57,6 +57,19 @@ export const semesters = pgTable(
     name: varchar("name", { length: 120 }).notNull(),
     startDate: date("start_date", { mode: "string" }).notNull(),
     endDate: date("end_date", { mode: "string" }).notNull(),
+    weeklyTargetHours: numeric("weekly_target_hours", {
+      precision: 7,
+      scale: 2,
+      mode: "number",
+    }),
+    monthlyTargetHours: numeric("monthly_target_hours", {
+      precision: 7,
+      scale: 2,
+      mode: "number",
+    }),
+    targetBasis: varchar("target_basis", { length: 8 }).$type<
+      "WEEKLY" | "MONTHLY"
+    >(),
     targetHours: numeric("target_hours", {
       precision: 7,
       scale: 2,
@@ -81,6 +94,10 @@ export const semesters = pgTable(
     index("semesters_dates_idx").on(table.startDate, table.endDate),
     check("semesters_valid_dates", sql`${table.endDate} >= ${table.startDate}`),
     check("semesters_positive_target", sql`${table.targetHours} > 0`),
+    check(
+      "semesters_complete_period_targets",
+      sql`(${table.weeklyTargetHours} is null and ${table.monthlyTargetHours} is null and ${table.targetBasis} is null) or (${table.weeklyTargetHours} is not null and ${table.monthlyTargetHours} is not null and ${table.targetBasis} is not null and ${table.weeklyTargetHours} > 0 and ${table.weeklyTargetHours} <= 84 and ${table.monthlyTargetHours} > 0 and ${table.monthlyTargetHours} <= 372 and ${table.targetBasis} in ('WEEKLY', 'MONTHLY'))`,
+    ),
   ],
 );
 

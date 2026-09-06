@@ -41,5 +41,5 @@ export const progressMessages = {
   complete: "🎉 Internship mission accomplished. The servers salute you.",
   almost: "🚀 Final stretch. Your target is within deploy range.",
   steady: "💻 Strong progress. Keep the activity timeline moving.",
-  starting: "☕ Code. Coffee. Internship. Repeat.",
+  starting: "Your next small win starts with one activity.",
 };

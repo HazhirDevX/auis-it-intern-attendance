@@ -30,7 +30,10 @@ export const metadata: Metadata = {
   applicationName: "AUIS IT Intern Portal",
   alternates: { canonical: "/" },
   icons: {
-    icon: [{ url: "/icon.png", type: "image/png", sizes: "512x512" }],
+    icon: [
+      { url: "/favicon.ico?v=2", sizes: "16x16 32x32 48x48" },
+      { url: "/icon.png?v=2", type: "image/png", sizes: "512x512" },
+    ],
     apple: [{ url: "/apple-icon.png", sizes: "180x180" }],
   },
   openGraph: {

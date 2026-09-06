@@ -74,6 +74,7 @@ export async function addInternAction(
     return errorState("The intern could not be added.");
   }
 
+  revalidatePath("/", "layout");
   revalidatePath("/admin/interns");
   revalidatePath("/dashboard");
   return { status: "success", message: "✅ Intern access created." };
@@ -121,6 +122,7 @@ export async function setInternActiveAction(formData: FormData) {
     ]);
   }
 
+  revalidatePath("/", "layout");
   revalidatePath("/admin/interns");
   revalidatePath("/dashboard");
   return {
@@ -143,7 +145,8 @@ export async function setSemesterMembershipAction(formData: FormData) {
     return errorState("Intern and semester are required.");
 
   await db.batch([
-    db.insert(semesterMemberships)
+    db
+      .insert(semesterMemberships)
       .values({ userId, semesterId, active })
       .onConflictDoUpdate({
         target: [semesterMemberships.userId, semesterMemberships.semesterId],
@@ -158,6 +161,7 @@ export async function setSemesterMembershipAction(formData: FormData) {
   ]);
 
   revalidatePath(`/admin/interns/${userId}`);
+  revalidatePath("/", "layout");
   revalidatePath("/admin/interns");
   revalidatePath("/analytics");
   revalidatePath("/dashboard");

@@ -1,0 +1,4 @@
+ALTER TABLE "semesters" ADD COLUMN "weekly_target_hours" numeric(7, 2);--> statement-breakpoint
+ALTER TABLE "semesters" ADD COLUMN "monthly_target_hours" numeric(7, 2);--> statement-breakpoint
+ALTER TABLE "semesters" ADD COLUMN "target_basis" varchar(8);--> statement-breakpoint
+ALTER TABLE "semesters" ADD CONSTRAINT "semesters_valid_period_targets" CHECK (("semesters"."weekly_target_hours" is null and "semesters"."monthly_target_hours" is null and "semesters"."target_basis" is null) or ("semesters"."weekly_target_hours" > 0 and "semesters"."weekly_target_hours" <= 84 and "semesters"."monthly_target_hours" > 0 and "semesters"."monthly_target_hours" <= 372 and "semesters"."target_basis" in ('WEEKLY', 'MONTHLY')));

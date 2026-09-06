@@ -1,4 +1,5 @@
 import "server-only";
+import { z } from "zod";
 
 import {
   and,
@@ -16,6 +17,7 @@ import {
 
 import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import { localDateString, weekStartString } from "@/lib/dates";
+import { addDays, monthBounds } from "@/lib/targets";
 import { db } from "@/lib/db";
 import {
   activities,
@@ -45,8 +47,13 @@ export async function getAllSemesters() {
       startDate: semesters.startDate,
       endDate: semesters.endDate,
       targetHours: semesters.targetHours,
+      weeklyTargetHours: semesters.weeklyTargetHours,
+      monthlyTargetHours: semesters.monthlyTargetHours,
+      targetBasis: semesters.targetBasis,
       status: semesters.status,
-      memberCount: count(semesterMemberships.id),
+      memberCount: numberSql(
+        sql`count(${semesterMemberships.id}) filter (where ${users.role} = 'STUDENT')`,
+      ),
       createdAt: semesters.createdAt,
     })
     .from(semesters)
@@ -54,6 +61,7 @@ export async function getAllSemesters() {
       semesterMemberships,
       eq(semesterMemberships.semesterId, semesters.id),
     )
+    .leftJoin(users, eq(users.id, semesterMemberships.userId))
     .groupBy(semesters.id)
     .orderBy(desc(semesters.startDate));
 }
@@ -83,10 +91,10 @@ export async function getUserMetrics(userId: string, semesterId: string) {
       activityCount: count(activities.id),
       averageHours: numberSql(sql`coalesce(avg(${activities.hours}), 0)`),
       weekHours: numberSql(
-        sql`coalesce(sum(${activities.hours}) filter (where ${activities.workDate} >= ${weekStart}), 0)`,
+        sql`coalesce(sum(${activities.hours}) filter (where ${activities.workDate} between ${weekStart} and ${addDays(weekStart, 6)}), 0)`,
       ),
       monthHours: numberSql(
-        sql`coalesce(sum(${activities.hours}) filter (where ${activities.workDate} >= ${monthStart}), 0)`,
+        sql`coalesce(sum(${activities.hours}) filter (where ${activities.workDate} between ${monthStart} and ${monthBounds(today).end}), 0)`,
       ),
     })
     .from(activities)
@@ -103,15 +111,23 @@ export async function getUserMetrics(userId: string, semesterId: string) {
   };
 }
 
-export async function getHoursSeries(userId: string, semesterId: string) {
+export async function getHoursSeries(
+  userId: string | null,
+  semesterId: string,
+) {
   const rows = await db
     .select({
       date: activities.workDate,
       hours: numberSql(sql`sum(${activities.hours})`),
+      count: count(activities.id),
     })
     .from(activities)
+    .innerJoin(users, eq(users.id, activities.userId))
     .where(
-      and(eq(activities.userId, userId), eq(activities.semesterId, semesterId)),
+      and(
+        userId ? eq(activities.userId, userId) : eq(users.role, "STUDENT"),
+        eq(activities.semesterId, semesterId),
+      ),
     )
     .groupBy(activities.workDate)
     .orderBy(asc(activities.workDate));
@@ -120,7 +136,7 @@ export async function getHoursSeries(userId: string, semesterId: string) {
   return rows.map((row) => {
     const hours = Number(row.hours);
     cumulative += hours;
-    return { date: row.date, hours, cumulative };
+    return { date: row.date, hours, cumulative, count: Number(row.count) };
   });
 }
 
@@ -147,7 +163,12 @@ export async function getInternProgress(semesterId: string) {
         eq(activities.semesterId, semesterMemberships.semesterId),
       ),
     )
-    .where(eq(semesterMemberships.semesterId, semesterId))
+    .where(
+      and(
+        eq(semesterMemberships.semesterId, semesterId),
+        eq(users.role, "STUDENT"),
+      ),
+    )
     .groupBy(users.id, semesterMemberships.active, semesters.targetHours)
     .orderBy(desc(sql`coalesce(sum(${activities.hours}), 0)`));
 
@@ -189,6 +210,22 @@ export async function getActivitiesPage(
   viewer: CurrentUser,
   filters: ActivityFilters,
 ) {
+  filters = {
+    ...filters,
+    semesterId: z.uuid().safeParse(filters.semesterId).success
+      ? filters.semesterId
+      : undefined,
+    internId: z.uuid().safeParse(filters.internId).success
+      ? filters.internId
+      : undefined,
+    from: z.iso.date().safeParse(filters.from).success
+      ? filters.from
+      : undefined,
+    to: z.iso.date().safeParse(filters.to).success ? filters.to : undefined,
+    page: Number.isFinite(filters.page)
+      ? Math.max(1, Math.floor(filters.page!))
+      : 1,
+  };
   const conditions: SQL[] = [];
 
   if (viewer.role === "ADMIN") {
@@ -273,12 +310,15 @@ export async function getRecentActivities(semesterId: string, limit = 6) {
     })
     .from(activities)
     .innerJoin(users, eq(users.id, activities.userId))
-    .where(eq(activities.semesterId, semesterId))
+    .where(
+      and(eq(activities.semesterId, semesterId), eq(users.role, "STUDENT")),
+    )
     .orderBy(desc(activities.workDate), desc(activities.createdAt))
     .limit(limit);
 }
 
 export async function getInternDetail(userId: string, semesterId: string) {
+  if (!z.uuid().safeParse(userId).success) return null;
   const [user] = await db
     .select({
       id: users.id,
@@ -299,7 +339,7 @@ export async function getInternDetail(userId: string, semesterId: string) {
     getHoursSeries(userId, semesterId),
     getActivitiesPage(
       { ...user, image: null },
-      { semesterId, page: 1, sort: "newest" },
+      { semesterId, internId: userId, page: 1, sort: "newest" },
     ),
   ]);
 

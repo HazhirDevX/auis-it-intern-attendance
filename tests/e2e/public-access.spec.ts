@@ -23,7 +23,9 @@ test("shows clear unauthorized-user guidance", async ({ page }) => {
   ).toBeVisible();
 });
 
-test("redirects legacy page paths to the root workspace URL", async ({ request }) => {
+test("redirects legacy page paths to the root workspace URL", async ({
+  request,
+}) => {
   const response = await request.fetch("/dashboard", { maxRedirects: 0 });
 
   expect(response.status()).toBe(307);

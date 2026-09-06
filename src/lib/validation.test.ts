@@ -55,7 +55,8 @@ describe("server input validation", () => {
       name: "Fall 2026",
       startDate: "2026-12-01",
       endDate: "2026-09-01",
-      targetHours: 120,
+      weeklyTargetHours: 10,
+      monthlyTargetHours: 40,
       activate: true,
       internIds: [],
     });
@@ -70,5 +71,18 @@ describe("server input validation", () => {
       semesterId: "none",
     });
     expect(result.semesterId).toBeUndefined();
+  });
+  it("discards a client-supplied official semester total", () => {
+    const parsed = semesterSchema.parse({
+      name: "Test semester",
+      startDate: "2027-01-01",
+      endDate: "2027-01-14",
+      weeklyTargetHours: 10,
+      monthlyTargetHours: 40,
+      targetHours: 99999,
+      targetBasis: "WEEKLY",
+    });
+    expect(parsed).not.toHaveProperty("targetHours");
+    expect(parsed.weeklyTargetHours).toBe(10);
   });
 });

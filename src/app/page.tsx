@@ -75,7 +75,7 @@ export default async function Home() {
                     Built for every semester
                   </p>
                   <h2 className="mt-1 text-xl font-semibold tracking-tight">
-                    One reliable attendance timeline
+                    Your work. Your momentum.
                   </h2>
                 </div>
                 <div className="grid size-11 place-items-center rounded-xl bg-[#0b2545] text-[#f2cf62]">
@@ -83,34 +83,36 @@ export default async function Home() {
                 </div>
               </div>
             </div>
-            <CardContent className="grid gap-3 p-5 sm:grid-cols-2 sm:p-7">
+            <CardContent className="grid gap-0 p-5 sm:p-7">
               {[
-                [Clock3, "Daily logs", "Fast, validated hour submission"],
+                [
+                  Clock3,
+                  "Log your activities",
+                  "Fast, validated hour submission",
+                ],
                 [
                   BarChart3,
-                  "Clear analytics",
+                  "See your progress",
                   "Progress without dashboard clutter",
                 ],
                 [
                   CheckCircle2,
-                  "Admin controls",
+                  "Stay connected",
                   "Interns, semesters, and exports",
                 ],
                 [
                   LockKeyhole,
                   "Server-enforced access",
-                  "Domain plus approved-user checks",
+                  "Verified Google account + approved access",
                 ],
               ].map(([Icon, title, description]) => (
                 <div
                   key={String(title)}
-                  className="rounded-xl border bg-white p-4 transition-transform hover:-translate-y-0.5"
+                  className="grid grid-cols-[28px_1fr] gap-x-4 border-b py-5 last:border-0"
                 >
                   <Icon className="size-5 text-[#a57c10]" />
-                  <h3 className="mt-4 text-sm font-semibold">
-                    {String(title)}
-                  </h3>
-                  <p className="mt-1 text-sm leading-5 text-muted-foreground">
+                  <h3 className="text-sm font-semibold">{String(title)}</h3>
+                  <p className="col-start-2 mt-1 text-sm leading-5 text-muted-foreground">
                     {String(description)}
                   </p>
                 </div>
@@ -118,11 +120,17 @@ export default async function Home() {
             </CardContent>
           </Card>
           <div className="mt-5 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-slate-400">
-            Code. Coffee. Internship. Repeat. ☕
-            <Link href="/privacy" className="underline-offset-4 hover:text-slate-200 hover:underline">
+            Small wins. Real skills. Your IT story.
+            <Link
+              href="/privacy"
+              className="underline-offset-4 hover:text-slate-200 hover:underline"
+            >
               Privacy
             </Link>
-            <Link href="/terms" className="underline-offset-4 hover:text-slate-200 hover:underline">
+            <Link
+              href="/terms"
+              className="underline-offset-4 hover:text-slate-200 hover:underline"
+            >
               Terms
             </Link>
           </div>

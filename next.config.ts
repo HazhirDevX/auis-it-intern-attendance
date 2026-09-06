@@ -24,7 +24,7 @@ const nextConfig: NextConfig = {
         {
           source: "/",
           has: [{ type: "query", key: "view", value: "history" }],
-          destination: "/activities",
+          destination: "/history",
         },
         {
           source: "/",

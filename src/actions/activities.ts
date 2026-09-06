@@ -9,9 +9,16 @@ import { db } from "@/lib/db";
 import { activities, auditLogs, semesters } from "@/lib/db/schema";
 import { canManageActivity } from "@/lib/permissions";
 import { activitySchema, activityUpdateSchema } from "@/lib/validation";
-import { getActiveSemester, getMembership } from "@/data/portal";
+import {
+  getActiveSemester,
+  getMembership,
+  getUserMetrics,
+} from "@/data/portal";
+import { localDateString } from "@/lib/dates";
+import { periodTargets, targetMessage } from "@/lib/targets";
 
 function refreshActivityViews() {
+  revalidatePath("/", "layout");
   revalidatePath("/dashboard");
   revalidatePath("/log-hours");
   revalidatePath("/analytics");
@@ -53,7 +60,44 @@ export async function createActivityAction(
     );
   }
 
+  let successMessage = "Activity saved. One more small win, safely logged.";
   try {
+    const before = await getUserMetrics(actor.id, semester.id);
+    const periods = periodTargets(semester, localDateString());
+    const candidates = [
+      {
+        label: "Semester",
+        hours: before.totalHours,
+        target: semester.targetHours,
+        inside: true,
+      },
+      {
+        label: "Month",
+        hours: before.monthHours,
+        target: periods.month.target,
+        inside:
+          parsed.data.workDate >= periods.month.start &&
+          parsed.data.workDate <= periods.month.end,
+      },
+      {
+        label: "Week",
+        hours: before.weekHours,
+        target: periods.week.target,
+        inside:
+          parsed.data.workDate >= periods.week.start &&
+          parsed.data.workDate <= periods.week.end,
+      },
+    ];
+    const milestone = candidates.find(
+      (row) =>
+        row.inside &&
+        row.target != null &&
+        row.target > 0 &&
+        row.hours < row.target &&
+        row.hours + parsed.data.hours >= row.target,
+    );
+    if (milestone)
+      successMessage = `Activity saved. ${targetMessage(milestone.label, milestone.hours + parsed.data.hours, milestone.target, before.activityCount)}`;
     const activityId = crypto.randomUUID();
     await db.batch([
       db.insert(activities).values({
@@ -81,7 +125,7 @@ export async function createActivityAction(
   refreshActivityViews();
   return {
     status: "success",
-    message: "📡 Mission logged. Your hours reached the database.",
+    message: successMessage,
   };
 }
 
@@ -137,7 +181,8 @@ export async function updateActivityAction(
 
   try {
     await db.batch([
-      db.update(activities)
+      db
+        .update(activities)
         .set({
           workDate: parsed.data.workDate,
           hours: parsed.data.hours,

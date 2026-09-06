@@ -3,7 +3,10 @@ import { Activity, ArrowRight, Clock3, Target, Users } from "lucide-react";
 
 import { MetricCard } from "@/components/portal/metric-card";
 import { PageHeader } from "@/components/portal/page-header";
-import { ProgressCard } from "@/components/portal/progress-card";
+import { PeriodProgress } from "@/components/portal/period-progress";
+import { InsightsWorkspace } from "@/components/portal/insights-workspace";
+import { localDateString } from "@/lib/dates";
+import { expectedHours } from "@/lib/targets";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +14,7 @@ import { requireUser } from "@/lib/auth/dal";
 import { formatDisplayDate } from "@/lib/dates";
 import {
   getActiveSemester,
+  getHoursSeries,
   getActivitiesPage,
   getInternProgress,
   getMembership,
@@ -25,7 +29,7 @@ export default async function DashboardPage() {
     return (
       <>
         <PageHeader
-          eyebrow="Overview"
+          eyebrow="Dashboard"
           title={`Welcome back, ${user.name.split(" ")[0]}`}
           description="There is no active internship semester yet."
         />
@@ -48,9 +52,10 @@ export default async function DashboardPage() {
   }
 
   if (user.role === "ADMIN") {
-    const [progress, recent] = await Promise.all([
+    const [progress, recent, departmentSeries] = await Promise.all([
       getInternProgress(semester.id),
       getRecentActivities(semester.id),
+      getHoursSeries(null, semester.id),
     ]);
     const totalHours = progress.reduce((sum, item) => sum + item.hours, 0);
     const completed = progress.filter(
@@ -59,7 +64,7 @@ export default async function DashboardPage() {
     return (
       <>
         <PageHeader
-          eyebrow="Admin overview"
+          eyebrow="Admin dashboard"
           title={`Welcome back, ${user.name.split(" ")[0]}`}
           description={`${semester.name} is active. Here is the department-wide internship picture.`}
         />
@@ -88,7 +93,7 @@ export default async function DashboardPage() {
             icon={Target}
           />
           <MetricCard
-            label="Activity entries"
+            label="Activities logged"
             value={String(
               progress.reduce((sum, item) => sum + item.activityCount, 0),
             )}
@@ -96,9 +101,49 @@ export default async function DashboardPage() {
             icon={Activity}
           />
         </div>
+        <div className="mt-5 flex flex-wrap gap-4 rounded-xl bg-[#e8f0ee] px-5 py-3 text-sm">
+          <span>
+            <strong>
+              {
+                progress.filter(
+                  (item) =>
+                    item.hours >= expectedHours(semester, localDateString()),
+                ).length
+              }
+            </strong>{" "}
+            interns on or ahead of pace
+          </span>
+          <span>
+            <strong>
+              {
+                progress.filter(
+                  (item) =>
+                    item.hours < expectedHours(semester, localDateString()),
+                ).length
+              }
+            </strong>{" "}
+            may need a check-in
+          </span>
+          <span>
+            <strong>
+              {(
+                progress.reduce((sum, item) => sum + item.progress, 0) /
+                Math.max(1, progress.length)
+              ).toFixed(1)}
+              %
+            </strong>{" "}
+            average completion
+          </span>
+        </div>
+        <InsightsWorkspace
+          data={departmentSeries}
+          semester={semester}
+          today={localDateString()}
+          compact
+        />
         <div className="mt-6 grid gap-6 xl:grid-cols-[1.2fr_.8fr]">
           <Card className="shadow-sm">
-            <CardHeader className="flex-row items-center justify-between">
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-lg">Intern progress</CardTitle>
               <Button asChild variant="ghost" size="sm">
                 <Link href="/?view=interns">
@@ -175,7 +220,7 @@ export default async function DashboardPage() {
     return (
       <>
         <PageHeader
-          eyebrow="Overview"
+          eyebrow="Dashboard"
           title={`Welcome back, ${user.name.split(" ")[0]}`}
           description={`${semester.name} is active, but you are not assigned to it.`}
         />
@@ -196,16 +241,17 @@ export default async function DashboardPage() {
       </>
     );
   }
-  const [metrics, activityPage] = await Promise.all([
+  const [metrics, activityPage, series] = await Promise.all([
     getUserMetrics(user.id, semester.id),
     getActivitiesPage(user, { semesterId: semester.id, page: 1 }),
+    getHoursSeries(user.id, semester.id),
   ]);
   return (
     <>
       <PageHeader
-        eyebrow="Student overview"
-        title={`Welcome back, ${user.name.split(" ")[0]} 👋`}
-        description={`${semester.name} · Another productive day in the IT universe.`}
+        eyebrow="Dashboard"
+        title={`Welcome back, ${user.name.split(" ")[0]}.`}
+        description={`${semester.name} · Small wins, real skills. Let’s make today count.`}
         action={
           <Button asChild>
             <Link href="/?view=log-hours">
@@ -215,60 +261,48 @@ export default async function DashboardPage() {
           </Button>
         }
       />
-      <ProgressCard
-        hours={metrics.totalHours}
-        target={Number(semester.targetHours)}
-        semesterName={semester.name}
-      />
-      <div className="mt-5 grid gap-4 sm:grid-cols-3">
-        <MetricCard
-          label="Hours this week"
-          value={metrics.weekHours.toFixed(1)}
-          icon={Clock3}
+      <PeriodProgress semester={semester} metrics={metrics} />
+      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(280px,.8fr)]">
+        <InsightsWorkspace
+          data={series}
+          semester={semester}
+          today={localDateString()}
+          compact
         />
-        <MetricCard
-          label="Activities"
-          value={String(metrics.activityCount)}
-          icon={Activity}
-        />
-        <MetricCard
-          label="Average entry"
-          value={`${metrics.averageHours.toFixed(1)} hrs`}
-          icon={Target}
-        />
-      </div>
-      <Card className="mt-6 shadow-sm">
-        <CardHeader className="flex-row items-center justify-between">
-          <CardTitle className="text-lg">Latest activity</CardTitle>
-          <Button asChild variant="ghost" size="sm">
-            <Link href="/?view=history">
-              View history
-              <ArrowRight className="size-4" />
-            </Link>
-          </Button>
-        </CardHeader>
-        <CardContent>
-          {activityPage.rows[0] ? (
-            <div className="rounded-xl border bg-muted/30 p-4">
-              <div className="flex flex-wrap items-center gap-3">
-                <Badge>
-                  {Number(activityPage.rows[0].hours).toFixed(1)} hrs
-                </Badge>
-                <span className="text-sm text-muted-foreground">
-                  {formatDisplayDate(activityPage.rows[0].workDate)}
-                </span>
-              </div>
-              <p className="mt-3 leading-6">
-                {activityPage.rows[0].description}
+        <Card className="mt-6 shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-lg">Recent activities</CardTitle>
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/?view=history">
+                View history
+                <ArrowRight className="size-4" />
+              </Link>
+            </Button>
+          </CardHeader>
+          <CardContent>
+            {activityPage.rows.length ? (
+              activityPage.rows.slice(0, 3).map((item) => (
+                <div
+                  key={item.id}
+                  className="border-b py-4 first:pt-0 last:border-0"
+                >
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Badge>{Number(item.hours).toFixed(1)} hrs</Badge>
+                    <span className="text-sm text-muted-foreground">
+                      {formatDisplayDate(item.workDate)}
+                    </span>
+                  </div>
+                  <p className="mt-3 leading-6">{item.description}</p>
+                </div>
+              ))
+            ) : (
+              <p className="py-10 text-center text-sm text-muted-foreground">
+                No activities yet. Your first entry starts the timeline.
               </p>
-            </div>
-          ) : (
-            <p className="py-10 text-center text-sm text-muted-foreground">
-              😴 No logs yet. Even servers need a coffee break.
-            </p>
-          )}
-        </CardContent>
-      </Card>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </>
   );
 }

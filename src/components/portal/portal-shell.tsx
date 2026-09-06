@@ -3,6 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { useState } from "react";
+import { DigitalBackground } from "@/components/portal/digital-background";
 import {
   Activity,
   BarChart3,
@@ -69,9 +71,11 @@ function initials(name: string) {
 function Navigation({
   user,
   mobile = false,
+  onNavigate,
 }: {
   user: ShellUser;
   mobile?: boolean;
+  onNavigate?: () => void;
 }) {
   const searchParams = useSearchParams();
   const activeView = searchParams.get("view") ?? "dashboard";
@@ -86,9 +90,12 @@ function Navigation({
   return (
     <div
       className={cn(
-        "flex h-full flex-col",
+        "flex h-full flex-col overflow-y-auto",
         mobile && "text-sidebar-foreground",
       )}
+      onClick={(event) => {
+        if ((event.target as HTMLElement).closest("a")) onNavigate?.();
+      }}
     >
       <Link
         href={viewHref("dashboard")}
@@ -111,7 +118,7 @@ function Navigation({
       <nav className="mt-8 space-y-1" aria-label="Student navigation">
         <Link href={viewHref("dashboard")} className={navClass("dashboard")}>
           <LayoutDashboard className="size-4" />
-          Overview
+          Dashboard
         </Link>
         {studentLinks.map((link) => (
           <Link
@@ -190,9 +197,17 @@ export function PortalShell({
   user: ShellUser;
   children: React.ReactNode;
 }) {
+  const [open, setOpen] = useState(false);
   return (
-    <div className="min-h-screen lg:grid lg:grid-cols-[272px_minmax(0,1fr)]">
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[272px] bg-sidebar px-5 py-6 lg:block">
+    <div className="portal-frame relative min-h-screen lg:grid lg:grid-cols-[248px_minmax(0,1fr)]">
+      <DigitalBackground />
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-white focus:p-3"
+      >
+        Skip to content
+      </a>
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[248px] bg-sidebar px-5 py-6 lg:block">
         <Navigation user={user} />
       </aside>
 
@@ -210,7 +225,7 @@ export function PortalShell({
           />
           <span className="sr-only">IT Intern Portal</span>
         </Link>
-        <Sheet>
+        <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>
             <Button variant="outline" size="icon" aria-label="Open navigation">
               <Menu className="size-5" />
@@ -226,14 +241,24 @@ export function PortalShell({
                 Navigate the AUIS IT Intern Portal.
               </SheetDescription>
             </SheetHeader>
-            <Navigation user={user} mobile />
+            <Navigation user={user} mobile onNavigate={() => setOpen(false)} />
           </SheetContent>
         </Sheet>
       </header>
 
-      <main className="min-w-0 lg:col-start-2">
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="relative min-w-0 outline-none lg:col-start-2"
+      >
         <div className="mx-auto w-full max-w-[1500px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
           {children}
+          <footer className="mt-12 flex items-center justify-between gap-4 border-t pt-5 text-xs text-muted-foreground">
+            <span>Developed by Hazhir IT-Intern</span>
+            <span className="font-mono text-[10px] uppercase tracking-widest">
+              AUIS / IT
+            </span>
+          </footer>
         </div>
       </main>
     </div>

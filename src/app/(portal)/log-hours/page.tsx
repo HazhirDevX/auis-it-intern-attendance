@@ -63,7 +63,7 @@ export default async function LogHoursPage() {
     <>
       <PageHeader
         eyebrow="Daily attendance"
-        title={`Welcome back, ${user.name.split(" ")[0]} 👋`}
+        title="Log Hours"
         description="Great interns log their work. Legendary interns remember what they did."
         action={
           <Button asChild variant="outline">
