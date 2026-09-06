@@ -56,4 +56,8 @@ Screenshots are generated under git-ignored `test-results/`. The suite checks St
 
 ## Deployment
 
+Verified September 6, 2026: lint, TypeScript, 18 unit tests, production build, and all 28 browser tests passed. Commit `e6cef57` was pushed to GitHub main and deployed to Vercel production (`dpl_E2pn4zmHDYkux7PuCJRhLVqTBkv8`, READY). Production migrations succeeded; counts remain 7 users, 3 activities, 1 semester, and 12.00 hours. The original 120-hour target remains unchanged.
+
+Production Google OAuth succeeded with the approved personal account. The rendered dashboard displayed its original activity. Public homepage and icons returned 200; the deployed favicon bytes match the official local icon, legacy dashboard redirects return 307, and unauthenticated export returns 401. All three required administrator roles were rechecked in production; their equivalent server access was tested on the isolated QA database, not through three separate live Google challenges.
+
 Run `npm run check` and the isolated browser suite before publishing. Apply migrations with Drizzle (direct Neon connection), push main, deploy the linked Vercel project, then verify the production favicon, public protections, authenticated navigation, and retained database counts. Never seed or write QA records into production.
