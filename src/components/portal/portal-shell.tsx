@@ -18,6 +18,7 @@ import {
   Terminal,
 } from "lucide-react";
 import { signOutAction } from "@/actions/auth";
+import { canLogActivity } from "@/lib/permissions";
 import { DigitalBackground } from "@/components/portal/digital-background";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -98,8 +99,19 @@ function Navigation({
       <div className="rail-section-label">
         <Terminal className="size-3" aria-hidden /> YOUR WORKSPACE
       </div>
-      <nav className="rail-links" aria-label="Student navigation">
-        {links(studentLinks)}
+      <nav
+        className="rail-links"
+        aria-label={
+          user.role === "ADMIN" ? "Department navigation" : "Student navigation"
+        }
+      >
+        {links(
+          studentLinks.filter(
+            (item) =>
+              canLogActivity(user) ||
+              !["log-hours", "history"].includes(item.view),
+          ),
+        )}
       </nav>
       {user.role === "ADMIN" && (
         <>

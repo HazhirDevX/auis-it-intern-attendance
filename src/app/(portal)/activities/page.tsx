@@ -10,6 +10,7 @@ import { PageHeader } from "@/components/portal/page-header";
 import { Button } from "@/components/ui/button";
 import { getActivitiesPage, getAllSemesters, getInterns } from "@/data/portal";
 import { requireUser } from "@/lib/auth/dal";
+import { canLogActivity } from "@/lib/permissions";
 
 type Params = {
   view?: string;
@@ -69,17 +70,25 @@ export default async function ActivitiesPage({
             : "Your internship timeline across current and previous semesters."
         }
         action={
-          <Button asChild>
-            <Link href="/?view=log-hours">
-              <Plus className="size-4" />
-              Log hours
-            </Link>
-          </Button>
+          canLogActivity(user) ? (
+            <Button asChild>
+              <Link href="/?view=log-hours">
+                <Plus className="size-4" />
+                Log hours
+              </Link>
+            </Button>
+          ) : (
+            <Button asChild variant="outline">
+              <Link href="/?view=export">Excel export</Link>
+            </Button>
+          )
         }
       />
       <ActivityFilters
         semesters={semesters.map(({ id, name }) => ({ id, name }))}
-        interns={interns?.map(({ id, name }) => ({ id, name }))}
+        interns={interns
+          ?.filter((intern) => intern.role === "STUDENT")
+          .map(({ id, name }) => ({ id, name }))}
         values={params}
       />
       <ActivityList items={items} isAdmin={user.role === "ADMIN"} />

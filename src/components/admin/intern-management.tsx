@@ -44,6 +44,7 @@ type Intern = {
   deletedAt?: string | null;
   createdAt: string;
   progress?: Progress;
+  semesterName?: string;
 };
 
 export function AddInternForm({
@@ -52,8 +53,17 @@ export function AddInternForm({
   semesters: Array<{ id: string; name: string; status: string }>;
 }) {
   const [state, action] = useActionState(addInternAction, initialActionState);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   useEffect(() => {
-    if (state.status === "success") toast.success(state.message);
+    if (state.status === "success") {
+      toast.success(state.message);
+      const timer = window.setTimeout(() => {
+        setName("");
+        setEmail("");
+      }, 0);
+      return () => window.clearTimeout(timer);
+    }
     if (state.status === "error" && state.message) toast.error(state.message);
   }, [state]);
 
@@ -72,7 +82,14 @@ export function AddInternForm({
         >
           <div className="space-y-2">
             <Label htmlFor="name">Full name</Label>
-            <Input id="name" name="name" placeholder="Full name" required />
+            <Input
+              id="name"
+              name="name"
+              placeholder="Full name"
+              required
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="email">AUIS email</Label>
@@ -80,6 +97,8 @@ export function AddInternForm({
               id="email"
               name="email"
               type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
               placeholder="student@auis.edu.krd"
               required
             />
@@ -121,6 +140,17 @@ export function AddInternForm({
             <SubmitButton pendingLabel="Adding intern…">
               Create intern access
             </SubmitButton>
+            {state.message && (
+              <p
+                role="status"
+                className={`mt-3 text-sm ${state.status === "error" ? "text-destructive" : "text-emerald-800"}`}
+              >
+                {state.message}{" "}
+                {Object.values(state.errors ?? {})
+                  .flat()
+                  .join(" ")}
+              </p>
+            )}
           </div>
         </form>
       </CardContent>
@@ -160,6 +190,7 @@ export function InternTable({ interns }: { interns: Intern[] }) {
               <TableHead>Progress</TableHead>
               <TableHead>Activities</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Current semester</TableHead>
               <TableHead className="text-right">Profile</TableHead>
             </TableRow>
           </TableHeader>
@@ -177,7 +208,10 @@ export function InternTable({ interns }: { interns: Intern[] }) {
                       {intern.role}
                     </Badge>
                   </div>
-                  <p className="text-xs text-muted-foreground">
+                  <p
+                    className="max-w-64 truncate text-xs text-muted-foreground"
+                    title={intern.email}
+                  >
                     {intern.email}
                   </p>
                 </TableCell>
@@ -189,7 +223,9 @@ export function InternTable({ interns }: { interns: Intern[] }) {
                 <TableCell>
                   {intern.progress
                     ? `${intern.progress.progress.toFixed(1)}%`
-                    : "Not assigned"}
+                    : intern.role === "ADMIN"
+                      ? "Not applicable"
+                      : "Not assigned"}
                 </TableCell>
                 <TableCell>{intern.progress?.activityCount ?? 0}</TableCell>
                 <TableCell>
@@ -207,6 +243,13 @@ export function InternTable({ interns }: { interns: Intern[] }) {
                         ? "Active"
                         : "Inactive"}
                   </Badge>
+                </TableCell>
+                <TableCell className="whitespace-normal">
+                  <span className="inline-block text-balance">
+                    {intern.role === "ADMIN"
+                      ? "Department access"
+                      : (intern.semesterName ?? "Not assigned")}
+                  </span>
                 </TableCell>
                 <TableCell className="text-right">
                   <Button asChild variant="ghost" size="sm">

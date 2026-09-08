@@ -9,6 +9,7 @@ import { getCurrentUser } from "@/lib/auth/dal";
 import { db } from "@/lib/db";
 import { auditLogs, semesterMemberships, users } from "@/lib/db/schema";
 import { internSchema } from "@/lib/validation";
+import { isUniqueViolation } from "@/lib/db/errors";
 
 export async function addInternAction(
   _previous: ActionState,
@@ -37,8 +38,7 @@ export async function addInternAction(
     .from(users)
     .where(eq(users.email, parsed.data.email))
     .limit(1);
-  if (existing.length)
-    return errorState("That AUIS email is already registered.");
+  if (existing.length) return errorState("This email already has an account.");
 
   try {
     const userId = crypto.randomUUID();
@@ -57,7 +57,7 @@ export async function addInternAction(
       metadata: { email: parsed.data.email, role: parsed.data.role },
     });
 
-    if (parsed.data.semesterId) {
+    if (parsed.data.semesterId && parsed.data.role === "STUDENT") {
       await db.batch([
         insertUser,
         db.insert(semesterMemberships).values({
@@ -71,6 +71,8 @@ export async function addInternAction(
       await db.batch([insertUser, insertAudit]);
     }
   } catch (error) {
+    if (isUniqueViolation(error))
+      return errorState("This email already has an account.");
     console.error("Intern creation failed", error);
     return errorState("The intern could not be added.");
   }
@@ -161,12 +163,14 @@ export async function setSemesterMembershipAction(formData: FormData) {
   )
     return errorState("Valid intern and semester are required.");
   const [target] = await db
-    .select({ deletedAt: users.deletedAt })
+    .select({ deletedAt: users.deletedAt, role: users.role })
     .from(users)
     .where(eq(users.id, userId))
     .limit(1);
   if (!target || target.deletedAt)
     return errorState("Deleted accounts cannot be assigned.");
+  if (target.role !== "STUDENT")
+    return errorState("Only students can be assigned as interns.");
 
   await db.batch([
     db

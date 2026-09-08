@@ -1,0 +1,1 @@
+ALTER TABLE "users" ADD CONSTRAINT "users_email_trimmed" CHECK ("users"."email" = btrim("users"."email") and "users"."email" !~ '[[:space:]]');

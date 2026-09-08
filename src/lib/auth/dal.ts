@@ -8,6 +8,7 @@ import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { normalizeAuisEmail } from "@/lib/validation";
+import { canLogActivity } from "@/lib/permissions";
 
 export type CurrentUser = {
   id: string;
@@ -55,5 +56,11 @@ export async function requireUser() {
 export async function requireAdmin() {
   const user = await requireUser();
   if (user.role !== "ADMIN") redirect("/access-denied?reason=forbidden");
+  return user;
+}
+
+export async function requireStudent() {
+  const user = await requireUser();
+  if (!canLogActivity(user)) redirect("/?view=dashboard");
   return user;
 }

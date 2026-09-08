@@ -6,14 +6,23 @@ import {
   MAX_DAILY_HOURS,
 } from "@/lib/constants";
 
-export const auisEmailSchema = z
+export function normalizeEmail(email: string) {
+  return email.trim().toLowerCase();
+}
+
+export const normalizeAuisEmail = normalizeEmail;
+
+const normalizedEmailSchema = z
   .string()
-  .trim()
-  .toLowerCase()
-  .pipe(z.email("Enter a valid AUIS email address."))
-  .refine((value) => value.endsWith(`@${AUIS_EMAIL_DOMAIN}`), {
+  .transform(normalizeEmail)
+  .pipe(z.email("Enter a valid email address."));
+
+export const auisEmailSchema = normalizedEmailSchema.refine(
+  (value) => value.endsWith(`@${AUIS_EMAIL_DOMAIN}`),
+  {
     message: `Email must end with @${AUIS_EMAIL_DOMAIN}.`,
-  });
+  },
+);
 
 export const activitySchema = z.object({
   workDate: z.iso.date("Choose a valid work date."),
@@ -34,7 +43,9 @@ export const activityUpdateSchema = activitySchema.extend({
 
 export const internSchema = z.object({
   name: z.string().trim().min(2, "Enter the intern's full name.").max(160),
-  email: auisEmailSchema,
+  email: normalizedEmailSchema.refine(isAllowedGoogleEmail, {
+    message: "Use an AUIS email or an explicitly authorized Google account.",
+  }),
   role: z.enum(["STUDENT", "ADMIN"]).default("STUDENT"),
   semesterId: z
     .union([z.uuid(), z.literal(""), z.literal("none")])
@@ -68,10 +79,6 @@ export const semesterSchema = z
       message: "A semester cannot span more than two years.",
     },
   );
-
-export function normalizeAuisEmail(email: string) {
-  return email.trim().toLowerCase();
-}
 
 export function isAuisEmail(email: string) {
   return auisEmailSchema.safeParse(email).success;

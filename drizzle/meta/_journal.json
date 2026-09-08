@@ -36,6 +36,13 @@
       "when": 1788715814411,
       "tag": "0004_needy_living_tribunal",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1788877304277,
+      "tag": "0005_early_gladiator",
+      "breakpoints": true
     }
   ]
 }

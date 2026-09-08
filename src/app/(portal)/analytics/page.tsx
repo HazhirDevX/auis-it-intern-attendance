@@ -58,7 +58,7 @@ export default async function AnalyticsPage({
     const selectedIntern = params.intern
       ? await getInternDetail(params.intern, selected.id)
       : null;
-    if (selectedIntern) {
+    if (selectedIntern?.user.role === "STUDENT") {
       const target = Number(selected.targetHours);
       return (
         <>
@@ -69,7 +69,7 @@ export default async function AnalyticsPage({
             action={
               <AdminAnalyticsFilters
                 semesters={semesters}
-                interns={interns}
+                interns={interns.filter((intern) => intern.role === "STUDENT")}
                 semester={selected.id}
                 intern={params.intern}
               />
@@ -122,7 +122,7 @@ export default async function AnalyticsPage({
           action={
             <AdminAnalyticsFilters
               semesters={semesters}
-              interns={interns}
+              interns={interns.filter((intern) => intern.role === "STUDENT")}
               semester={selected.id}
             />
           }

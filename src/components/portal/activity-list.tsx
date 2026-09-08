@@ -244,7 +244,10 @@ export function ActivityList({
                     <p className="font-medium text-primary">
                       {activity.userName}
                     </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p
+                      className="max-w-60 truncate text-xs text-muted-foreground"
+                      title={activity.userEmail}
+                    >
                       {activity.userEmail}
                     </p>
                   </TableCell>
@@ -255,7 +258,7 @@ export function ActivityList({
                 <TableCell className="metric-number font-semibold">
                   {activity.hours.toFixed(2)}
                 </TableCell>
-                <TableCell className="max-w-md whitespace-normal leading-6">
+                <TableCell className="max-w-md whitespace-normal leading-6 [overflow-wrap:anywhere]">
                   {activity.description}
                 </TableCell>
                 <TableCell>
@@ -299,8 +302,10 @@ export function ActivityList({
               </div>
               <RowActions activity={activity} isAdmin={isAdmin} />
             </div>
-            <p className="mt-4 text-sm leading-6">{activity.description}</p>
-            <div className="mt-4 flex items-center justify-between gap-3">
+            <p className="mt-4 text-sm leading-6 [overflow-wrap:anywhere]">
+              {activity.description}
+            </p>
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
               <Badge variant="secondary">{activity.semesterName}</Badge>
               <span className="text-[11px] text-muted-foreground">
                 Added {formatDisplayDateTime(new Date(activity.createdAt))}

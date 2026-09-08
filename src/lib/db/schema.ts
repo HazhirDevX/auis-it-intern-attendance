@@ -45,6 +45,10 @@ export const users = pgTable(
     index("users_role_active_idx").on(table.role, table.active),
     check("users_email_lowercase", sql`${table.email} = lower(${table.email})`),
     check(
+      "users_email_trimmed",
+      sql`${table.email} = btrim(${table.email}) and ${table.email} !~ '[[:space:]]'`,
+    ),
+    check(
       "deleted_students_cannot_login",
       sql`${table.deletedAt} is null or (${table.role} = 'STUDENT' and ${table.active} = false and ${table.image} is null)`,
     ),

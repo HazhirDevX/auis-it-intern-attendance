@@ -85,7 +85,7 @@ export function PeriodProgress({
               <p className="metric-number target-value">
                 {row.hours.toFixed(1)}
                 <span
-                  className={`ml-1 text-sm font-normal ${index === 2 ? "text-slate-300" : "text-muted-foreground"}`}
+                  className={`ml-1 inline-block whitespace-nowrap text-sm font-normal ${index === 2 ? "text-slate-300" : "text-muted-foreground"}`}
                 >
                   / {row.target == null ? "—" : row.target.toFixed(1)} hrs
                 </span>

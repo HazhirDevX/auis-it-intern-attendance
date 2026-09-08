@@ -11,11 +11,11 @@ import {
   getMembership,
   getUserMetrics,
 } from "@/data/portal";
-import { requireUser } from "@/lib/auth/dal";
+import { requireStudent } from "@/lib/auth/dal";
 import { localDateString } from "@/lib/dates";
 
 export default async function LogHoursPage() {
-  const user = await requireUser();
+  const user = await requireStudent();
   const semester = await getActiveSemester();
 
   if (!semester) {

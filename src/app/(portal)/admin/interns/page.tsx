@@ -34,6 +34,7 @@ export default async function InternsPage() {
           createdAt: intern.createdAt.toISOString(),
           deletedAt: intern.deletedAt?.toISOString() ?? null,
           progress: progressById.get(intern.id),
+          semesterName: progressById.has(intern.id) ? active?.name : undefined,
         }))}
       />
     </>

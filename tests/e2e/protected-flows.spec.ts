@@ -9,6 +9,186 @@ const safeQA = Boolean(
 );
 test.skip(!safeQA, "Protected tests require the isolated QA database runner.");
 const sql = safeQA ? neon(process.env.DATABASE_URL!) : null;
+
+test("admin can edit and delete a student record after logging restrictions", async ({
+  page,
+  context,
+}) => {
+  const [student] =
+    await sql!`select id from users where email='hazhir.a.2004@gmail.com'`;
+  const [semester] =
+    await sql!`select id,start_date::text from semesters where status='ACTIVE'`;
+  const description = `QA admin management ${Date.now()}`;
+  await sql!`insert into activities(user_id,semester_id,work_date,hours,description) values(${student.id},${semester.id},${semester.start_date},0.25,${description})`;
+  await session(context, "ha23109@auis.edu.krd");
+  await page.goto(
+    `/?view=activities&search=${encodeURIComponent(description)}`,
+  );
+  await page
+    .getByRole("button", { name: /Edit activity from/ })
+    .first()
+    .click();
+  await page
+    .getByRole("dialog")
+    .getByLabel("Hours", { exact: true })
+    .fill("0.5");
+  await page.getByRole("button", { name: "Save changes", exact: true }).click();
+  await expect(page.getByRole("dialog")).not.toBeVisible();
+  const [updated] =
+    await sql!`select hours from activities where description=${description}`;
+  expect(Number(updated.hours)).toBe(0.5);
+  await page
+    .getByRole("button", { name: /Delete activity from/ })
+    .first()
+    .click();
+  await page
+    .getByRole("alertdialog")
+    .getByRole("button", { name: "Delete activity", exact: true })
+    .click();
+  await expect(page.getByText(description, { exact: true })).toHaveCount(0);
+  expect(
+    await sql!`select id from activities where description=${description}`,
+  ).toHaveLength(0);
+});
+
+test("Fall semester cards stay readable at every requested width", async ({
+  page,
+  context,
+}) => {
+  test.setTimeout(120000);
+  await session(context, "ha23109@auis.edu.krd");
+  for (const width of [320, 375, 430, 768, 1024, 1366, 1440, 1920]) {
+    await page.setViewportSize({ width, height: width === 1366 ? 768 : 900 });
+    for (const view of ["export", "semesters"]) {
+      await page.goto(`/?view=${view}`);
+      const summary = page
+        .locator("[data-semester-summary]")
+        .filter({
+          has: page.getByRole("heading", { name: "Fall 2026", exact: true }),
+        });
+      const card = summary.locator("xpath=ancestor::*[@data-slot='card']");
+      await card.scrollIntoViewIfNeeded();
+      await expect(summary.getByRole("heading")).toHaveText("Fall\u00a02026");
+      const titleHeight = await summary
+        .getByRole("heading")
+        .evaluate(
+          (element) =>
+            element.getBoundingClientRect().height /
+            parseFloat(getComputedStyle(element).lineHeight),
+        );
+      expect(titleHeight).toBeLessThanOrEqual(1.1);
+      await page.screenshot({
+        path: `test-results/Fall-${view}-${width}.png`,
+        caret: "initial",
+      });
+    }
+  }
+});
+
+test("all administrators are blocked from personal logging, including direct server requests", async ({
+  page,
+  context,
+}) => {
+  test.setTimeout(120000);
+  await session(context, "hazhir.a.2004@gmail.com", "STUDENT");
+  await page.goto("/?view=log-hours");
+  await page.getByLabel("Work date").fill("2000-01-01");
+  await page.getByLabel("Hours worked").fill("0.25");
+  await page
+    .getByLabel("Activity description", { exact: true })
+    .fill("QA blocked admin personal activity");
+  const requestPromise = page.waitForRequest(
+    (request) =>
+      request.method() === "POST" && Boolean(request.headers()["next-action"]),
+  );
+  await page.getByRole("button", { name: "Log activity", exact: true }).click();
+  const request = await requestPromise;
+  await expect(
+    page.getByText(/Work date must be within/).first(),
+  ).toBeVisible();
+  const [semester] =
+    await sql!`select start_date::text from semesters where status='ACTIVE'`;
+  for (const email of [
+    "ha23109@auis.edu.krd",
+    "zhir.barzan@auis.edu.krd",
+    "karo.omed@auis.edu.krd",
+  ]) {
+    await context.clearCookies();
+    await session(context, email, "STUDENT");
+    await page.goto("/?view=dashboard");
+    await expect(page.locator('a[href="/?view=log-hours"]')).toHaveCount(0);
+    await expect(page.locator('a[href="/?view=history"]')).toHaveCount(0);
+    await expect(
+      page.getByRole("region", { name: "Your hour targets" }),
+    ).toHaveCount(0);
+    for (const path of ["/?view=log-hours", "/log-hours", "/?view=history"]) {
+      await page.goto(path);
+      await expect(page).toHaveURL(/view=dashboard/);
+      await expect(
+        page.getByRole("button", { name: "Log activity", exact: true }),
+      ).toHaveCount(0);
+    }
+    const response = await context.request.post(request.url(), {
+      headers: {
+        "content-type": request.headers()["content-type"],
+        "next-action": request.headers()["next-action"],
+        origin: "http://localhost:3100",
+      },
+      data: request
+        .postDataBuffer()!
+        .toString()
+        .replaceAll("2000-01-01", semester.start_date),
+    });
+    expect(await response.text()).toContain(
+      "Only students can log intern activity.",
+    );
+    const [count] =
+      await sql!`select count(*)::int as total from activities a join users u on a.user_id=u.id where u.email=${email} and a.description='QA blocked admin personal activity'`;
+    expect(count.total).toBe(0);
+    await page.goto("/?view=activities");
+    await expect(
+      page.getByRole("button", { name: /Edit activity from/ }).first(),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /Delete activity from/ }).first(),
+    ).toBeVisible();
+  }
+});
+
+test("duplicate creation normalizes email and retains the canonical account", async ({
+  page,
+  context,
+}) => {
+  await session(context, "ha23109@auis.edu.krd");
+  const before =
+    await sql!`select id,active from users where email='hazhir.a.2004@gmail.com'`;
+  await page.goto("/?view=interns");
+  await page.getByText("Add an authorized intern", { exact: true }).click();
+  await page.getByLabel("Full name").fill("Duplicate attempt");
+  for (const email of [
+    "hazhir.a.2004@gmail.com",
+    "HAZHIR.A.2004@gmail.com",
+    "  hazhir.a.2004@gmail.com  ",
+  ]) {
+    await page.getByLabel("AUIS email", { exact: true }).fill(email);
+    const responsePromise = page.waitForResponse(
+      (response) =>
+        response.request().method() === "POST" &&
+        Boolean(response.request().headers()["next-action"]),
+    );
+    await page.getByRole("button", { name: "Create intern access" }).click();
+    expect(await (await responsePromise).text()).toContain(
+      "This email already has an account.",
+    );
+  }
+  const after =
+    await sql!`select id,active from users where lower(btrim(email))='hazhir.a.2004@gmail.com'`;
+  expect(after).toEqual(before);
+  expect(after).toHaveLength(1);
+  await expect(
+    sql!`insert into users(name,email) values('QA invalid email',' ha23109@auis.edu.krd')`,
+  ).rejects.toThrow();
+});
 async function session(
   context: BrowserContext,
   email: string,
@@ -68,10 +248,10 @@ for (const role of ["STUDENT", "ADMIN"] as const) {
       });
       const sections = [
         "dashboard",
-        "log-hours",
+        ...(role === "STUDENT" ? ["log-hours"] : []),
         "analytics",
         "activities",
-        "history",
+        ...(role === "STUDENT" ? ["history"] : []),
         ...(role === "ADMIN"
           ? ["interns", "semesters", "export", "audit"]
           : []),
@@ -122,6 +302,33 @@ for (const role of ["STUDENT", "ADMIN"] as const) {
             });
           expect(collisions, "filter controls overlap").toBe(0);
         }
+        if (view === "export" || view === "semesters") {
+          const failures = await page
+            .locator("[data-semester-summary]")
+            .evaluateAll((summaries) =>
+              summaries.flatMap((summary) => {
+                const bounds = summary.getBoundingClientRect();
+                return Array.from(summary.querySelectorAll("h2,span"))
+                  .filter((element) => {
+                    const rect = element.getBoundingClientRect();
+                    const style = getComputedStyle(element);
+                    const shortText =
+                      element.tagName === "SPAN" ||
+                      element.textContent?.replace(/\s/g, " ") === "Fall 2026";
+                    return (
+                      rect.right > bounds.right + 1 ||
+                      (shortText &&
+                        rect.height > parseFloat(style.lineHeight) + 6)
+                    );
+                  })
+                  .map((element) => element.textContent);
+              }),
+            );
+          expect(
+            failures,
+            "semester labels fit without word-by-word wrapping",
+          ).toEqual([]);
+        }
         expect(
           await page.evaluate(
             () => document.documentElement.scrollWidth - innerWidth,
@@ -146,15 +353,24 @@ for (const role of ["STUDENT", "ADMIN"] as const) {
       await page.goto("/?view=dashboard");
       if (width < 1024)
         await page.getByRole("button", { name: "Open navigation" }).click();
-      await page.getByRole("link", { name: "History", exact: true }).click();
+      const navigationLabel = role === "ADMIN" ? "Excel Export" : "History";
+      await page
+        .getByRole("link", { name: navigationLabel, exact: true })
+        .click();
       await expect(
-        page.getByRole("heading", { name: "History", exact: true }),
+        page.getByRole("heading", {
+          name: role === "ADMIN" ? "Excel export" : "History",
+          exact: true,
+        }),
       ).toBeVisible();
       if (width < 1024)
         await expect(page.getByRole("dialog")).not.toBeVisible();
       await page.reload();
       await expect(
-        page.getByRole("heading", { name: "History", exact: true }),
+        page.getByRole("heading", {
+          name: role === "ADMIN" ? "Excel export" : "History",
+          exact: true,
+        }),
       ).toBeVisible();
       expect(errors).toEqual([]);
     });

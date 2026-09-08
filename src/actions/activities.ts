@@ -7,7 +7,7 @@ import { errorState, type ActionState } from "@/actions/types";
 import { getCurrentUser } from "@/lib/auth/dal";
 import { db } from "@/lib/db";
 import { activities, auditLogs, semesters } from "@/lib/db/schema";
-import { canManageActivity } from "@/lib/permissions";
+import { canLogActivity, canManageActivity } from "@/lib/permissions";
 import { activitySchema, activityUpdateSchema } from "@/lib/validation";
 import {
   getActiveSemester,
@@ -31,6 +31,10 @@ export async function createActivityAction(
 ): Promise<ActionState> {
   const actor = await getCurrentUser();
   if (!actor) return errorState("Your session has expired. Sign in again.");
+  if (!canLogActivity(actor))
+    return errorState(
+      "Only students can log intern activity. Administrators manage student records.",
+    );
 
   const parsed = activitySchema.safeParse({
     workDate: formData.get("workDate"),

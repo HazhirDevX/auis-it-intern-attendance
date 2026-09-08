@@ -25,7 +25,7 @@ export function MetricCard({
     >
       <CardContent className="p-5">
         <div className="flex items-start justify-between gap-4">
-          <div>
+          <div className="min-w-0">
             <p className="text-sm font-medium text-muted-foreground">{label}</p>
             <p className="metric-number mt-2 text-3xl font-semibold text-primary">
               {value}
@@ -36,7 +36,7 @@ export function MetricCard({
           </div>
           <span
             className={cn(
-              "grid size-10 place-items-center rounded-xl bg-muted text-primary",
+              "grid size-10 shrink-0 place-items-center rounded-xl bg-muted text-primary",
               accent && "bg-[#f7edcf] text-[#8a6a11]",
             )}
           >

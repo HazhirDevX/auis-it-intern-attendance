@@ -5,10 +5,21 @@ import {
   auisEmailSchema,
   isAllowedGoogleEmail,
   internSchema,
+  normalizeEmail,
   semesterSchema,
 } from "@/lib/validation";
 
 describe("server input validation", () => {
+  it.each([
+    "hazhir.a.2004@gmail.com",
+    "HAZHIR.A.2004@gmail.com",
+    "  hazhir.a.2004@gmail.com  ",
+  ])("canonicalizes account identity: %s", (email) => {
+    expect(normalizeEmail(email)).toBe("hazhir.a.2004@gmail.com");
+    expect(internSchema.parse({ name: "Hazhir", email }).email).toBe(
+      "hazhir.a.2004@gmail.com",
+    );
+  });
   it("accepts only normalized AUIS addresses", () => {
     expect(auisEmailSchema.parse(" HA23109@auis.edu.krd ")).toBe(
       "ha23109@auis.edu.krd",

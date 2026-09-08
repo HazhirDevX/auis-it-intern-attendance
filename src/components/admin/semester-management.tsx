@@ -16,7 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
+import { SemesterSummary } from "@/components/portal/semester-summary";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -77,11 +77,14 @@ export function CreateSemesterForm({
                   className="flex cursor-pointer items-start gap-3 rounded-lg bg-white p-3 shadow-sm"
                 >
                   <Checkbox name="internIds" value={intern.id} defaultChecked />
-                  <span>
+                  <span className="min-w-0">
                     <span className="block text-sm font-medium">
                       {intern.name}
                     </span>
-                    <span className="block text-xs text-muted-foreground">
+                    <span
+                      className="block truncate text-xs text-muted-foreground"
+                      title={intern.email}
+                    >
                       {intern.email}
                     </span>
                   </span>
@@ -141,37 +144,19 @@ type SemesterRow = {
 
 export function SemesterCards({ semesters }: { semesters: SemesterRow[] }) {
   return (
-    <div className="mt-6 grid gap-4 lg:grid-cols-2">
+    <div className="mt-6 grid items-start gap-4 lg:grid-cols-2">
       {semesters.map((semester) => (
         <Card key={semester.id} className="shadow-sm">
           <CardContent className="p-5">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="font-semibold text-primary">
-                    {semester.name}
-                  </h2>
-                  <Badge
-                    variant={
-                      semester.status === "ACTIVE" ? "default" : "secondary"
-                    }
-                  >
-                    {semester.status}
-                  </Badge>
-                </div>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  {formatDisplayDate(semester.startDate)} –{" "}
-                  {formatDisplayDate(semester.endDate)}
-                </p>
-              </div>
-              <p className="metric-number text-right text-sm font-semibold">
-                {Number(semester.targetHours)} hrs
-                <br />
-                <span className="font-normal text-muted-foreground">
-                  {semester.memberCount} interns
-                </span>
-              </p>
-            </div>
+            <SemesterSummary {...semester} />
+            <p className="mt-4 flex flex-wrap gap-x-1 text-sm text-muted-foreground">
+              <span className="whitespace-nowrap">
+                {formatDisplayDate(semester.startDate)} –{" "}
+              </span>
+              <span className="whitespace-nowrap">
+                {formatDisplayDate(semester.endDate)}
+              </span>
+            </p>
             <div className="mt-5 flex flex-wrap gap-2">
               <p className="w-full text-xs text-muted-foreground">
                 {semester.targetBasis

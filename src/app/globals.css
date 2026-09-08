@@ -356,8 +356,7 @@ input[type="date"]::-webkit-date-and-time-value {
   overflow-y: auto;
 }
 [data-slot="table-cell"] {
-  white-space: normal;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
 }
 [data-slot="button"] {
   transition:
@@ -978,5 +977,13 @@ main:has(> .public-footer) {
   }
   .intern-records td:last-child {
     text-align: left;
+  }
+  .intern-records td:nth-child(6) {
+    grid-column: span 2;
+  }
+  .intern-records td:nth-child(6)::before {
+    content: "Semester: ";
+    color: #53636c;
+    font-size: 11px;
   }
 }

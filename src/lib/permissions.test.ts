@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   canAccessAdmin,
+  canLogActivity,
   canManageActivity,
   canViewUser,
 } from "@/lib/permissions";
@@ -16,6 +17,10 @@ const student = {
 const admin = { ...student, id: "admin-1", role: "ADMIN" as const };
 
 describe("activity authorization", () => {
+  it("allows only students to create personal activity", () => {
+    expect(canLogActivity(student)).toBe(true);
+    expect(canLogActivity(admin)).toBe(false);
+  });
   it("allows a student to manage only their own activity", () => {
     expect(canManageActivity(student, "student-1")).toBe(true);
     expect(canManageActivity(student, "student-2")).toBe(false);

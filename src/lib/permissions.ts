@@ -2,6 +2,10 @@ import type { UserRole } from "@/lib/db/schema";
 
 type Actor = { id: string; role: UserRole };
 
+export function canLogActivity(actor: { role: UserRole }) {
+  return actor.role === "STUDENT";
+}
+
 export function canManageActivity(actor: Actor, activityUserId: string) {
   return actor.role === "ADMIN" || actor.id === activityUserId;
 }

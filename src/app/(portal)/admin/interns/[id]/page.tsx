@@ -42,6 +42,26 @@ export default async function InternDetailPage({
     getMembership(id, selected.id),
   ]);
   if (!detail) notFound();
+  if (detail.user.role === "ADMIN") {
+    return (
+      <>
+        <PageHeader
+          eyebrow="Administrator profile"
+          title={detail.user.name}
+          description={detail.user.email}
+          truncateDescription
+        />
+        <div className="rounded-xl border bg-card p-5">
+          <Badge>ADMIN</Badge>
+          <p className="mt-3 text-sm text-muted-foreground">
+            Department administrator. Full student management, semester
+            reporting, analytics, and export access. Administrators do not log
+            intern hours or receive personal targets.
+          </p>
+        </div>
+      </>
+    );
+  }
   const items: ActivityListItem[] = detail.activities.map((item) => ({
     ...item,
     hours: Number(item.hours),
@@ -54,6 +74,7 @@ export default async function InternDetailPage({
         eyebrow="Intern profile"
         title={detail.user.name}
         description={detail.user.email}
+        truncateDescription
         action={
           <div className="flex flex-wrap items-end gap-3">
             <SemesterPicker semesters={semesters} value={selected.id} />

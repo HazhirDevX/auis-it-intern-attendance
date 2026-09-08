@@ -6,12 +6,14 @@ export function PageHeader({
   description,
   icon: Icon,
   action,
+  truncateDescription = false,
 }: {
   eyebrow?: string;
   title: string;
   description: string;
   icon?: LucideIcon;
   action?: React.ReactNode;
+  truncateDescription?: boolean;
 }) {
   return (
     <header className="page-heading">
@@ -31,7 +33,10 @@ export function PageHeader({
             {title}
           </h1>
         </div>
-        <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
+        <p
+          title={truncateDescription ? description : undefined}
+          className={`mt-3 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base ${truncateDescription ? "truncate" : ""}`}
+        >
           {description}
         </p>
       </div>
