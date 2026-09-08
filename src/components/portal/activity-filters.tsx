@@ -44,13 +44,13 @@ export function ActivityFilters({
   }
 
   return (
-    <div className="mb-5 rounded-xl border bg-card p-4 shadow-sm">
+    <div className="filter-panel">
       <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-primary">
         <SlidersHorizontal className="size-4 text-[#a57c10]" />
         Filter activity
       </div>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-8">
-        <div className="space-y-2 xl:col-span-2">
+      <div className="filter-grid">
+        <div className="filter-search space-y-2">
           <Label htmlFor="activity-search">Search</Label>
           <form
             onSubmit={(event) => {
@@ -58,11 +58,12 @@ export function ActivityFilters({
               const data = new FormData(event.currentTarget);
               update("search", String(data.get("search") ?? ""));
             }}
-            className="flex gap-2"
+            className="flex min-w-0 gap-2"
           >
             <Input
               id="activity-search"
               name="search"
+              key={values.search ?? ""}
               defaultValue={values.search}
               placeholder="Description or intern"
             />
@@ -70,6 +71,7 @@ export function ActivityFilters({
               type="submit"
               variant="outline"
               size="icon"
+              className="shrink-0"
               aria-label="Search activities"
             >
               <Search className="size-4" />
@@ -82,7 +84,7 @@ export function ActivityFilters({
             value={values.semester ?? "all"}
             onValueChange={(value) => update("semester", value)}
           >
-            <SelectTrigger>
+            <SelectTrigger aria-label="Semester">
               <SelectValue placeholder="All semesters" />
             </SelectTrigger>
             <SelectContent>
@@ -102,7 +104,7 @@ export function ActivityFilters({
               value={values.intern ?? "all"}
               onValueChange={(value) => update("intern", value)}
             >
-              <SelectTrigger>
+              <SelectTrigger aria-label="Intern">
                 <SelectValue placeholder="All interns" />
               </SelectTrigger>
               <SelectContent>
@@ -116,20 +118,22 @@ export function ActivityFilters({
             </Select>
           </div>
         )}
-        <div className="space-y-2">
+        <div className="filter-date space-y-2">
           <Label htmlFor="activity-from">From date</Label>
           <Input
             id="activity-from"
             type="date"
+            key={values.from ?? ""}
             defaultValue={values.from}
             onChange={(event) => update("from", event.target.value)}
           />
         </div>
-        <div className="space-y-2">
+        <div className="filter-date space-y-2">
           <Label htmlFor="activity-to">To date</Label>
           <Input
             id="activity-to"
             type="date"
+            key={values.to ?? ""}
             defaultValue={values.to}
             onChange={(event) => update("to", event.target.value)}
           />
@@ -140,7 +144,7 @@ export function ActivityFilters({
             value={values.sort ?? "newest"}
             onValueChange={(value) => update("sort", value)}
           >
-            <SelectTrigger>
+            <SelectTrigger aria-label="Order">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

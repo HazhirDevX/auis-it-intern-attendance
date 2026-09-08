@@ -47,11 +47,11 @@ export function TargetFields({
     Math.abs(Number(monthly) - (Number(weekly) * 52) / 12) >
       ((Number(weekly) * 52) / 12) * 0.1;
   return (
-    <fieldset className="space-y-4 sm:col-span-2 xl:col-span-4">
+    <fieldset className="target-fields space-y-4 sm:col-span-2 xl:col-span-4">
       <legend className="mb-3 text-sm font-semibold">
         Dates & hour targets
       </legend>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="target-fields-grid">
         <div className="space-y-2">
           <Label htmlFor={`${prefix}-semester-start`}>Start date</Label>
           <Input
@@ -108,7 +108,7 @@ export function TargetFields({
           />
         </div>
       </div>
-      <div className="target-rule grid gap-4 rounded-xl border border-[#c4981b]/30 bg-[#fffaf0] p-4 sm:grid-cols-[1fr_auto]">
+      <div className="target-rule grid gap-4 rounded-xl border border-[#c4981b]/30 bg-[#fffaf0] p-4">
         <div className="space-y-2">
           <Label htmlFor={`${prefix}-target-basis`}>
             Calculate the official semester total from

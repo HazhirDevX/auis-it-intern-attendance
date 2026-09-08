@@ -115,35 +115,50 @@ export function targetMessage(
   target: number | null,
   seed = 0,
 ) {
+  const lower = period.toLowerCase();
+  const label = lower.includes("week")
+    ? "Weekly"
+    : lower.includes("month")
+      ? "Monthly"
+      : "Semester";
   if (target == null)
-    return "Historical target not configured. Your hours still count.";
-  if (target === 0)
-    return "This period is outside the semester. Catch you next cycle.";
-  const percent = hours / target;
+    return hours
+      ? "💾 Hours saved. An admin can set the period goal."
+      : "🖥️ System status: suspiciously quiet. Your first log awaits.";
+  if (target === 0) return "🛰️ Outside this semester. Catch you next cycle.";
   const pools =
-    percent > 1
+    hours > target
       ? [
-          `${period} target exceeded. Apparently, you came with extra RAM.`,
-          `${roundHours(hours - target)} hours beyond target. Overachiever mode: enabled.`,
+          `🔥 ${label} target exceeded. Productivity has escaped containment.`,
+          `💻 ${label} goal surpassed. Extra RAM apparently included.`,
+          `📈 ${label} target passed. The graph is now showing off.`,
+          `🚀 ${roundHours(hours - target)} hours above target. Please leave some tasks for tomorrow.`,
         ]
-      : percent >= 1
+      : hours >= target
         ? [
-            `${target} hours, logged. ${period} mission compiled successfully.`,
-            `${period} target reached. Even the servers are impressed.`,
+            `🏆 ${label} mission complete. The database officially approves.`,
+            `🎉 ${target} hours reached. ${label} boss battle completed.`,
+            `📡 ${label} hours confirmed. Mission control says: nicely done.`,
+            `✅ ${label} target reached. No rollback required.`,
           ]
-        : percent >= 0.8
+        : hours === 0
           ? [
-              `Only ${roundHours(target - hours)} hours to go. Final stretch, no loading screen.`,
-              "Almost there. One good session can move the needle.",
+              "😴 No hours yet. The database is getting lonely.",
+              "🖥️ System status: suspiciously quiet. Log your first mission.",
             ]
-          : percent >= 0.5
+          : hours / target >= 0.8
             ? [
-                "Halfway is a milestone, not a parking spot.",
-                "Solid progress. Keep shipping the small wins.",
+                `🎯 Only ${roundHours(target - hours)} hours left. Final boss loading…`,
+                "🚀 Nearly there. The progress bar believes in you.",
               ]
-            : [
-                "Your next small win starts with one activity.",
-                "Progress is saved one session at a time.",
-              ];
+            : hours / target >= 0.5
+              ? [
+                  "⚡ Halfway compiled. Keep shipping the small wins.",
+                  "💻 Progress detected. Bugs are getting nervous.",
+                ]
+              : [
+                  "🛠️ Small fixes. Real impact. Your hours count.",
+                  "📡 Progress received. The mothership says keep going.",
+                ];
   return pools[Math.abs(seed) % pools.length];
 }

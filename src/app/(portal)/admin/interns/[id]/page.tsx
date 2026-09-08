@@ -1,3 +1,4 @@
+import { DeleteStudentButton } from "@/components/admin/delete-student";
 import { notFound } from "next/navigation";
 import { localDateString } from "@/lib/dates";
 
@@ -56,28 +57,44 @@ export default async function InternDetailPage({
         action={
           <div className="flex flex-wrap items-end gap-3">
             <SemesterPicker semesters={semesters} value={selected.id} />
-            <InternAccessButton userId={id} active={detail.user.active} />
+            {detail.user.role === "STUDENT" && !detail.user.deletedAt && (
+              <>
+                <InternAccessButton userId={id} active={detail.user.active} />
+                <DeleteStudentButton
+                  id={id}
+                  name={detail.user.name}
+                  email={detail.user.email}
+                />
+              </>
+            )}
           </div>
         }
       />
       <div className="mb-5 flex flex-wrap items-center gap-3">
         <Badge>{detail.user.role}</Badge>
         <Badge variant={detail.user.active ? "outline" : "secondary"}>
-          {detail.user.active ? "Authorized" : "Inactive"}
+          {detail.user.deletedAt
+            ? "Account deleted · history retained"
+            : detail.user.active
+              ? "Authorized"
+              : "Inactive"}
         </Badge>
         <Badge variant={membership?.active ? "outline" : "secondary"}>
           {membership?.active
             ? `Assigned to ${selected.name}`
             : `Not assigned to ${selected.name}`}
         </Badge>
-        <MembershipButton
-          userId={id}
-          semesterId={selected.id}
-          active={Boolean(membership?.active)}
-        />
+        {!detail.user.deletedAt && (
+          <MembershipButton
+            userId={id}
+            semesterId={selected.id}
+            active={Boolean(membership?.active)}
+          />
+        )}
       </div>
       <PeriodProgress semester={selected} metrics={detail.metrics} />
       <InsightsWorkspace
+        key={selected.id}
         data={detail.series}
         semester={selected}
         today={localDateString()}

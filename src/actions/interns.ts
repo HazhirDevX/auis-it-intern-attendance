@@ -1,6 +1,7 @@
 "use server";
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
+import { z } from "zod";
 import { revalidatePath } from "next/cache";
 
 import { errorState, type ActionState } from "@/actions/types";
@@ -87,16 +88,29 @@ export async function setInternActiveAction(formData: FormData) {
 
   const userId = String(formData.get("userId") ?? "");
   const active = formData.get("active") === "true";
+  if (!z.uuid().safeParse(userId).success)
+    return errorState("Invalid student account.");
   if (userId === actor.id && !active) {
     return errorState("You cannot deactivate your own administrator account.");
   }
 
   const [target] = await db
-    .select({ id: users.id, email: users.email })
+    .select({
+      id: users.id,
+      email: users.email,
+      role: users.role,
+      deletedAt: users.deletedAt,
+    })
     .from(users)
     .where(eq(users.id, userId))
     .limit(1);
   if (!target) return errorState("Intern not found.");
+  if (target.role !== "STUDENT")
+    return errorState("Administrator access cannot be changed here.");
+  if (target.deletedAt)
+    return errorState(
+      "This account was permanently deleted. Access cannot be restored.",
+    );
 
   const updateUser = db
     .update(users)
@@ -141,8 +155,18 @@ export async function setSemesterMembershipAction(formData: FormData) {
   const userId = String(formData.get("userId") ?? "");
   const semesterId = String(formData.get("semesterId") ?? "");
   const active = formData.get("active") === "true";
-  if (!userId || !semesterId)
-    return errorState("Intern and semester are required.");
+  if (
+    !z.uuid().safeParse(userId).success ||
+    !z.uuid().safeParse(semesterId).success
+  )
+    return errorState("Valid intern and semester are required.");
+  const [target] = await db
+    .select({ deletedAt: users.deletedAt })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+  if (!target || target.deletedAt)
+    return errorState("Deleted accounts cannot be assigned.");
 
   await db.batch([
     db
@@ -170,5 +194,64 @@ export async function setSemesterMembershipAction(formData: FormData) {
     message: active
       ? "Intern assigned to semester."
       : "Semester participation disabled; history retained.",
+  };
+}
+
+export async function deleteStudentAccountAction(
+  _previous: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const actor = await getCurrentUser();
+  if (!actor || actor.role !== "ADMIN")
+    return errorState("Admin access required.");
+  const id = String(formData.get("userId") ?? "");
+  const confirmation = String(formData.get("confirmation") ?? "")
+    .trim()
+    .toLowerCase();
+  if (!z.uuid().safeParse(id).success)
+    return errorState("Invalid student account.");
+  const [target] = await db
+    .select()
+    .from(users)
+    .where(eq(users.id, id))
+    .limit(1);
+  if (!target || target.role !== "STUDENT" || target.id === actor.id)
+    return errorState(
+      "Only student accounts can be deleted. Administrator accounts are protected.",
+    );
+  if (target.deletedAt)
+    return errorState("This student account has already been deleted.");
+  if (confirmation !== target.email)
+    return errorState("Enter the student's exact email to confirm deletion.");
+  try {
+    // One atomic statement: preserve every foreign key and historical record.
+    // Conditional UPDATE also rejects a concurrent role change or repeat deletion.
+    const result = await db.execute(sql`
+      WITH removed AS (
+        UPDATE users SET active=false, deleted_at=now(), image=NULL, updated_at=now()
+        WHERE id=${id}::uuid AND role='STUDENT' AND deleted_at IS NULL AND email=${confirmation}
+        RETURNING id
+      ), memberships AS (
+        UPDATE semester_memberships SET active=false WHERE user_id IN (SELECT id FROM removed)
+      ), audit AS (
+        INSERT INTO audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+        SELECT ${actor.id}::uuid,'STUDENT_ACCOUNT_DELETED','USER',id,
+          jsonb_build_object('historyPreserved',true,'policy','Permanent access removal; identified reporting archive retained')
+        FROM removed
+      )
+      SELECT id FROM removed
+    `);
+    if (!result.rows.length)
+      return errorState(
+        "Account changed. Refresh and review it before trying again.",
+      );
+  } catch {
+    return errorState("The account could not be deleted. Nothing was removed.");
+  }
+  revalidatePath("/", "layout");
+  return {
+    status: "success",
+    message:
+      "Student account deleted. Login is permanently disabled; attendance and semester reports are preserved.",
   };
 }

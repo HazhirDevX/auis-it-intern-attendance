@@ -41,6 +41,7 @@ type Intern = {
   email: string;
   role: "STUDENT" | "ADMIN";
   active: boolean;
+  deletedAt?: string | null;
   createdAt: string;
   progress?: Progress;
 };
@@ -86,7 +87,7 @@ export function AddInternForm({
           <div className="space-y-2">
             <Label>Role</Label>
             <Select name="role" defaultValue="STUDENT">
-              <SelectTrigger>
+              <SelectTrigger aria-label="Role">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -103,7 +104,7 @@ export function AddInternForm({
                 semesters.find((item) => item.status === "ACTIVE")?.id ?? "none"
               }
             >
-              <SelectTrigger>
+              <SelectTrigger aria-label="Semester">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -151,7 +152,7 @@ export function InternTable({ interns }: { interns: Intern[] }) {
         />
       </div>
       <div className="overflow-x-auto">
-        <Table>
+        <Table className="intern-records">
           <TableHeader>
             <TableRow>
               <TableHead>Intern</TableHead>
@@ -200,7 +201,11 @@ export function InternTable({ interns }: { interns: Intern[] }) {
                         : ""
                     }
                   >
-                    {intern.active ? "Active" : "Inactive"}
+                    {intern.deletedAt
+                      ? "Deleted · archived"
+                      : intern.active
+                        ? "Active"
+                        : "Inactive"}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right">

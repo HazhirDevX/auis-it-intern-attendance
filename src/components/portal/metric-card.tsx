@@ -19,7 +19,7 @@ export function MetricCard({
   return (
     <Card
       className={cn(
-        "overflow-hidden shadow-sm",
+        "metric-tile overflow-hidden shadow-sm",
         accent && "border-[#c4981b]/40 bg-[#fffdf7]",
       )}
     >

@@ -60,7 +60,9 @@ export async function createActivityAction(
     );
   }
 
-  let successMessage = "Activity saved. One more small win, safely logged.";
+  let achievement = false;
+  let successMessage =
+    "📡 Your hours have successfully reached the mothership.";
   try {
     const before = await getUserMetrics(actor.id, semester.id);
     const periods = periodTargets(semester, localDateString());
@@ -96,6 +98,7 @@ export async function createActivityAction(
         row.hours < row.target &&
         row.hours + parsed.data.hours >= row.target,
     );
+    achievement = Boolean(milestone);
     if (milestone)
       successMessage = `Activity saved. ${targetMessage(milestone.label, milestone.hours + parsed.data.hours, milestone.target, before.activityCount)}`;
     const activityId = crypto.randomUUID();
@@ -126,6 +129,7 @@ export async function createActivityAction(
   return {
     status: "success",
     message: successMessage,
+    achievement,
   };
 }
 

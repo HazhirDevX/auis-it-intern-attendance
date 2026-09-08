@@ -20,7 +20,7 @@ export default async function InternsPage() {
       <PageHeader
         eyebrow="Access management"
         title="Authorized interns"
-        description="Manage approved accounts, semester assignments, and access. Deactivation preserves every activity."
+        description="Manage approved accounts, semester assignments, and access. Deactivate temporarily or permanently remove student access; history stays safe."
       />
       <details className="rounded-xl border bg-white p-5">
         <summary className="cursor-pointer py-2 font-semibold">
@@ -32,6 +32,7 @@ export default async function InternsPage() {
         interns={interns.map((intern) => ({
           ...intern,
           createdAt: intern.createdAt.toISOString(),
+          deletedAt: intern.deletedAt?.toISOString() ?? null,
           progress: progressById.get(intern.id),
         }))}
       />

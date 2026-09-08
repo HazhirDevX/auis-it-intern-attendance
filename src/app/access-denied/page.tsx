@@ -1,3 +1,4 @@
+import { PublicFooter } from "@/components/public-footer";
 import Image from "next/image";
 import Link from "next/link";
 import { Ban, Mail, ShieldAlert } from "lucide-react";
@@ -14,7 +15,7 @@ export default async function AccessDeniedPage({
   const domainError = reason === "domain";
   const roleError = reason === "forbidden";
   return (
-    <main className="grid min-h-screen place-items-center bg-[#071d37] px-4 py-10">
+    <main className="grid min-h-screen place-items-center bg-[#071d37] px-4 pt-10 pb-24">
       <Card className="w-full max-w-lg border-white/10 shadow-2xl">
         <CardContent className="p-7 text-center sm:p-10">
           <Image
@@ -57,6 +58,7 @@ export default async function AccessDeniedPage({
           </Button>
         </CardContent>
       </Card>
+      <PublicFooter />
     </main>
   );
 }

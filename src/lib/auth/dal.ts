@@ -30,12 +30,13 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
       role: users.role,
       image: users.image,
       active: users.active,
+      deletedAt: users.deletedAt,
     })
     .from(users)
     .where(eq(users.email, normalizeAuisEmail(sessionEmail)))
     .limit(1);
 
-  if (!user?.active) return null;
+  if (!user?.active || user.deletedAt) return null;
   return {
     id: user.id,
     name: user.name,

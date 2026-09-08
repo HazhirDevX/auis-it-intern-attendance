@@ -29,6 +29,13 @@
       "when": 1788696692966,
       "tag": "0003_boring_firelord",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1788715814411,
+      "tag": "0004_needy_living_tribunal",
+      "breakpoints": true
     }
   ]
 }

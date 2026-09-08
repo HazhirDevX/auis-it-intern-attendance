@@ -100,6 +100,7 @@ export default async function AnalyticsPage({
           </div>
           <div className="mt-6">
             <InsightsWorkspace
+              key={selected.id + (params.intern ?? "all")}
               data={selectedIntern.series}
               semester={selected}
               today={localDateString()}
@@ -151,6 +152,7 @@ export default async function AnalyticsPage({
           />
         </div>
         <InsightsWorkspace
+          key={selected.id + (params.intern ?? "all")}
           data={departmentSeries}
           semester={{
             ...selected,
@@ -171,6 +173,7 @@ export default async function AnalyticsPage({
             data={progress.map((item) => ({
               name: item.name,
               hours: item.hours,
+              activityCount: item.activityCount,
               targetHours: Number(item.targetHours),
             }))}
           />
@@ -196,8 +199,9 @@ export default async function AnalyticsPage({
         }
         action={<SemesterPicker semesters={semesters} value={selected.id} />}
       />
-      <PeriodProgress semester={selected} metrics={metrics} />
+      <PeriodProgress semester={selected} metrics={metrics} compact />
       <InsightsWorkspace
+        key={selected.id + (params.intern ?? "all")}
         data={series}
         semester={selected}
         today={localDateString()}

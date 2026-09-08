@@ -45,12 +45,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
 
       const [user] = await db
-        .select({ id: users.id, active: users.active })
+        .select({
+          id: users.id,
+          active: users.active,
+          deletedAt: users.deletedAt,
+        })
         .from(users)
         .where(eq(users.email, email))
         .limit(1);
 
-      if (!user?.active) {
+      if (!user?.active || user.deletedAt) {
         return "/access-denied?reason=unauthorized";
       }
 

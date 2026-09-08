@@ -8,9 +8,8 @@ async function main() {
   const { eq } = await import("drizzle-orm");
   const { neon } = await import("@neondatabase/serverless");
   const { drizzle } = await import("drizzle-orm/neon-http");
-  const { auditLogs, semesterMemberships, semesters, users } = await import(
-    "./schema"
-  );
+  const { auditLogs, semesterMemberships, semesters, users } =
+    await import("./schema");
 
   if (!process.env.DATABASE_URL) {
     throw new Error("DATABASE_URL is required to seed the database.");

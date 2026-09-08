@@ -91,25 +91,23 @@ export async function updateSemesterTargetsAction(
             or(eq(semesters.status, "ACTIVE"), eq(semesters.status, "DRAFT")),
           ),
         ),
-      db
-        .insert(auditLogs)
-        .values({
-          actorUserId: actor.id,
-          action: "SEMESTER_TARGETS_UPDATED",
-          entityType: "SEMESTER",
-          entityId: id.data,
-          metadata: {
-            before: {
-              startDate: existing.startDate,
-              endDate: existing.endDate,
-              targetHours: existing.targetHours,
-              weeklyTargetHours: existing.weeklyTargetHours,
-              monthlyTargetHours: existing.monthlyTargetHours,
-              targetBasis: existing.targetBasis,
-            },
-            after: settings,
+      db.insert(auditLogs).values({
+        actorUserId: actor.id,
+        action: "SEMESTER_TARGETS_UPDATED",
+        entityType: "SEMESTER",
+        entityId: id.data,
+        metadata: {
+          before: {
+            startDate: existing.startDate,
+            endDate: existing.endDate,
+            targetHours: existing.targetHours,
+            weeklyTargetHours: existing.weeklyTargetHours,
+            monthlyTargetHours: existing.monthlyTargetHours,
+            targetBasis: existing.targetBasis,
           },
-        }),
+          after: settings,
+        },
+      }),
     ]);
     refreshSemesterViews();
     return {

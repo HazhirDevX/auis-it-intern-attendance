@@ -30,7 +30,7 @@ export default async function DashboardPage() {
       <>
         <PageHeader
           eyebrow="Dashboard"
-          title={`Welcome back, ${user.name.split(" ")[0]}`}
+          title={`Mission control, ${user.name.split(" ")[0]} 🛰️`}
           description="There is no active internship semester yet."
         />
         <Card className="border-dashed">
@@ -65,10 +65,10 @@ export default async function DashboardPage() {
       <>
         <PageHeader
           eyebrow="Admin dashboard"
-          title={`Welcome back, ${user.name.split(" ")[0]}`}
+          title={`Mission control, ${user.name.split(" ")[0]} 🛰️`}
           description={`${semester.name} is active. Here is the department-wide internship picture.`}
         />
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="admin-metrics grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <MetricCard
             label="Active interns"
             value={String(
@@ -205,7 +205,7 @@ export default async function DashboardPage() {
                 ))
               ) : (
                 <p className="py-10 text-center text-sm text-muted-foreground">
-                  No activity yet.
+                  📡 No signal yet. The interns are still booting up.
                 </p>
               )}
             </CardContent>
@@ -250,8 +250,8 @@ export default async function DashboardPage() {
     <>
       <PageHeader
         eyebrow="Dashboard"
-        title={`Welcome back, ${user.name.split(" ")[0]}.`}
-        description={`${semester.name} · Small wins, real skills. Let’s make today count.`}
+        title={`Hey ${user.name.split(" ")[0]}, ready to make an impact? 👋`}
+        description={`${semester.name} · Real tasks. Real skills. Occasionally, a printer that refuses to cooperate.`}
         action={
           <Button asChild>
             <Link href="/?view=log-hours">
@@ -262,7 +262,7 @@ export default async function DashboardPage() {
         }
       />
       <PeriodProgress semester={semester} metrics={metrics} />
-      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(280px,.8fr)]">
+      <div className="grid items-start gap-6 2xl:grid-cols-[minmax(0,1.6fr)_minmax(280px,.8fr)]">
         <InsightsWorkspace
           data={series}
           semester={semester}
@@ -297,7 +297,7 @@ export default async function DashboardPage() {
               ))
             ) : (
               <p className="py-10 text-center text-sm text-muted-foreground">
-                No activities yet. Your first entry starts the timeline.
+                😴 No activities yet. The database is getting lonely.
               </p>
             )}
           </CardContent>

@@ -38,7 +38,11 @@ export function InsightsWorkspace({
   const [measure, setMeasure] = useState<"hours" | "count">("hours");
   const [from, setFrom] = useState(semester.startDate);
   const [to, setTo] = useState(
-    today < semester.endDate ? today : semester.endDate,
+    today < semester.startDate
+      ? semester.startDate
+      : today < semester.endDate
+        ? today
+        : semester.endDate,
   );
   const id = useId().replaceAll(":", "");
   const start = from >= semester.startDate ? from : semester.startDate;
@@ -51,14 +55,20 @@ export function InsightsWorkspace({
   const total = rows.reduce((sum, row) => sum + row.hours, 0);
   const count = rows.reduce((sum, row) => sum + row.count, 0);
   const best = [...rows].sort((a, b) => b.hours - a.hours)[0];
-  const chart = (running: boolean) => (
+  const bestWeek = [...aggregateSeries(data, "weekly", start, end)].sort(
+    (a, b) => b.hours - a.hours,
+  )[0];
+  const bestMonth = [...aggregateSeries(data, "monthly", start, end)].sort(
+    (a, b) => b.hours - a.hours,
+  )[0];
+  const chart = (running: boolean, activityTrend = false) => (
     <div
-      className="h-64 w-full min-w-0 sm:h-72"
+      className={`chart-surface w-full min-w-0 ${compact ? "h-44" : "h-64 sm:h-72"}`}
       role="img"
       aria-label={
         running
           ? "Cumulative hours compared with expected progress. Exact values are in chart data below."
-          : `${period} ${measure}. Exact values are in chart data below.`
+          : `${period} ${activityTrend ? "activities" : measure}. Exact values are in chart data below.`
       }
     >
       {hydrated ? (
@@ -84,11 +94,11 @@ export function InsightsWorkspace({
               axisLine={false}
               tickLine={false}
               tick={{ fontSize: 11 }}
-              allowDecimals={running || measure === "hours"}
+              allowDecimals={running || (!activityTrend && measure === "hours")}
             />
             <Tooltip
               contentStyle={{
-                borderRadius: 12,
+                borderRadius: 4,
                 border: "1px solid #dfe4ea",
                 fontSize: 12,
               }}
@@ -115,10 +125,16 @@ export function InsightsWorkspace({
             ) : (
               <Bar
                 isAnimationActive={false}
-                dataKey={measure}
-                name={measure === "hours" ? "Hours" : "Activities logged"}
-                fill={measure === "hours" ? "#c4981b" : "#2f6b7a"}
-                radius={[4, 4, 0, 0]}
+                dataKey={activityTrend ? "count" : measure}
+                name={
+                  !activityTrend && measure === "hours"
+                    ? "Hours"
+                    : "Activities logged"
+                }
+                fill={
+                  !activityTrend && measure === "hours" ? "#ad8212" : "#2f6b7a"
+                }
+                radius={[1, 1, 0, 0]}
                 maxBarSize={36}
               />
             )}
@@ -132,17 +148,14 @@ export function InsightsWorkspace({
     </div>
   );
   return (
-    <section
-      className="mt-6 min-w-0 rounded-2xl border bg-white p-5 sm:p-6"
-      aria-label="Activity insights"
-    >
+    <section className="insights-panel min-w-0" aria-label="Activity insights">
       <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
         <div>
           <p className="font-mono text-[10px] uppercase tracking-widest text-[#8a6a11]">
-            {compact ? "A little momentum" : "Explore your data"}
+            {compact ? "📡 SIGNAL CHECK" : "📊 THE DATA LAB"}
           </p>
           <h2 className="mt-1 text-lg font-semibold">
-            {compact ? "Your weekly rhythm" : "Activity & progress trends"}
+            {compact ? "Hours in. Impact out." : "Activity & progress trends"}
           </h2>
         </div>
         {!compact && (
@@ -205,16 +218,30 @@ export function InsightsWorkspace({
           </Button>
         </div>
       )}
-      <div className={`grid min-w-0 gap-8 ${!compact ? "xl:grid-cols-2" : ""}`}>
+      <div
+        className={`grid min-w-0 gap-6 ${compact ? "sm:grid-cols-2" : "xl:grid-cols-2"}`}
+      >
         <div className="min-w-0">
           {!data.length && (
             <p className="mb-2 text-sm text-muted-foreground">
-              Your chart is in standby. Log your first activity to bring it
-              online.
+              📊 Nothing to graph yet. The charts are judging silently.
             </p>
+          )}
+          {compact && (
+            <h3 className="mb-3 font-mono text-[10px] uppercase tracking-wider">
+              Weekly hours
+            </h3>
           )}
           {chart(false)}
         </div>
+        {compact && (
+          <div className="min-w-0">
+            <h3 className="mb-3 font-mono text-[10px] uppercase tracking-wider">
+              Activities over time
+            </h3>
+            {chart(false, true)}
+          </div>
+        )}
         {!compact && (
           <div className="min-w-0">
             <h3 className="mb-2 text-sm font-medium">
@@ -228,7 +255,9 @@ export function InsightsWorkspace({
           </div>
         )}
       </div>
-      <div className="mt-5 grid grid-cols-2 gap-4 border-t pt-4 text-xs sm:grid-cols-4">
+      <div
+        className={`mt-5 grid grid-cols-2 gap-4 border-t pt-4 text-xs ${compact ? "" : "sm:grid-cols-4"}`}
+      >
         <div className="text-muted-foreground">
           Activities logged
           <strong className="mt-1 block text-lg text-primary">{count}</strong>
@@ -239,27 +268,55 @@ export function InsightsWorkspace({
             {(count ? total / count : 0).toFixed(1)} hrs
           </strong>
         </div>
-        <div className="text-muted-foreground">
-          Active days
-          <strong className="mt-1 block text-lg text-primary">
-            {activeDays}
-          </strong>
-        </div>
-        <div className="text-muted-foreground">
-          Best{" "}
-          {period === "weekly"
-            ? "week"
-            : period === "monthly"
-              ? "month"
-              : "day"}
-          <strong className="mt-1 block text-lg text-primary">
-            {best?.hours.toFixed(1) ?? "0.0"} hrs
-          </strong>
-          <span>
-            {best && best.hours > 0 ? best.date : "Waiting for a first win"}
-          </span>
-        </div>
+        {!compact && (
+          <div className="text-muted-foreground">
+            Active days
+            <strong className="mt-1 block text-lg text-primary">
+              {activeDays}
+            </strong>
+          </div>
+        )}
+        {!compact && (
+          <div className="text-muted-foreground">
+            Best{" "}
+            {period === "weekly"
+              ? "week"
+              : period === "monthly"
+                ? "month"
+                : "day"}
+            <strong className="mt-1 block text-lg text-primary">
+              {best?.hours.toFixed(1) ?? "0.0"} hrs
+            </strong>
+            <span>
+              {best && best.hours > 0 ? best.date : "Waiting for a first win"}
+            </span>
+          </div>
+        )}
       </div>
+      {!compact && (
+        <div className="mt-5 grid gap-3 border-t pt-4 text-xs sm:grid-cols-2">
+          <p>
+            🏆 Most active week{" "}
+            <strong className="ml-2">
+              {bestWeek?.hours.toFixed(1) ?? "0"} hrs
+            </strong>
+            <span className="block text-muted-foreground">
+              {bestWeek?.hours ? bestWeek.date : "Waiting for the first log"}
+            </span>
+          </p>
+          <p>
+            📅 Most active month{" "}
+            <strong className="ml-2">
+              {bestMonth?.hours.toFixed(1) ?? "0"} hrs
+            </strong>
+            <span className="block text-muted-foreground">
+              {bestMonth?.hours
+                ? bestMonth.date.slice(0, 7)
+                : "No monthly signal yet"}
+            </span>
+          </p>
+        </div>
+      )}
       <details className="mt-4 text-xs">
         <summary className="cursor-pointer py-2 text-muted-foreground">
           View accessible chart data
@@ -286,6 +343,36 @@ export function InsightsWorkspace({
           </table>
         </div>
       </details>
+      {!compact && (
+        <details className="mt-2 text-xs">
+          <summary className="cursor-pointer py-2 text-muted-foreground">
+            View cumulative and expected values
+          </summary>
+          <div className="max-h-60 overflow-auto">
+            <table className="w-full text-left">
+              <caption className="sr-only">
+                Cumulative actual and expected hours
+              </caption>
+              <thead>
+                <tr>
+                  <th className="p-2">Date</th>
+                  <th>Actual hours</th>
+                  <th>Expected hours</th>
+                </tr>
+              </thead>
+              <tbody>
+                {cumulative.map((row) => (
+                  <tr key={row.date} className="border-t">
+                    <td className="p-2">{row.date}</td>
+                    <td>{row.cumulative.toFixed(2)}</td>
+                    <td>{row.expected.toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </details>
+      )}
     </section>
   );
 }

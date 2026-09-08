@@ -12,6 +12,7 @@ export function PeriodProgress({
   semester,
   metrics,
   today = localDateString(),
+  compact = false,
 }: {
   semester: TargetSettings & { name: string };
   metrics: {
@@ -21,6 +22,7 @@ export function PeriodProgress({
     activityCount: number;
   };
   today?: string;
+  compact?: boolean;
 }) {
   const periods = periodTargets(semester, today);
   const expected = expectedHours(semester, today);
@@ -51,24 +53,24 @@ export function PeriodProgress({
   return (
     <section
       aria-label="Your hour targets"
-      className="progress-workspace overflow-hidden rounded-2xl border bg-white"
+      className={`target-rack ${compact ? "target-rack-compact" : ""}`}
     >
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b px-5 py-4 sm:px-6">
+      <div className="target-rack-head">
         <h2 className="flex items-center gap-2 font-semibold">
           <Terminal aria-hidden className="size-4 text-[#947011]" /> Your
-          progress, in sync.
+          mission progress
         </h2>
-        <span className="text-xs text-muted-foreground">
+        <span className="text-xs text-slate-300">
           {semester.startDate} → {semester.endDate}
         </span>
       </div>
-      <div className="grid divide-y md:grid-cols-3 md:divide-x md:divide-y-0">
+      <div className="target-lanes">
         {rows.map((row, index) => {
           const state = progressState(row.hours, row.target);
           return (
             <div
               key={row.label}
-              className={`min-w-0 p-5 sm:p-6 ${index === 2 ? "bg-primary text-white" : ""}`}
+              className={`target-lane ${state.complete ? "target-complete" : ""}`}
             >
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-medium">{row.label}</h3>
@@ -79,12 +81,8 @@ export function PeriodProgress({
                   />
                 )}
               </div>
-              <p
-                className={`mt-1 text-xs ${index === 2 ? "text-slate-300" : "text-muted-foreground"}`}
-              >
-                {row.detail}
-              </p>
-              <p className="metric-number mt-6 text-4xl font-semibold">
+              <p className="target-detail">{row.detail}</p>
+              <p className="metric-number target-value">
                 {row.hours.toFixed(1)}
                 <span
                   className={`ml-1 text-sm font-normal ${index === 2 ? "text-slate-300" : "text-muted-foreground"}`}
@@ -103,23 +101,25 @@ export function PeriodProgress({
                     ? `${row.hours} hours; target not configured`
                     : `${state.percentage.toFixed(1)} percent, ${row.hours} of ${row.target} hours`
                 }
-                className={`my-4 h-2 overflow-hidden rounded-full ${index === 2 ? "bg-white/15" : "bg-muted"}`}
+                className="pixel-meter"
               >
                 <div
-                  className="h-full rounded-full bg-[#c4981b] transition-[width] duration-500"
+                  className="pixel-meter-fill"
                   style={{ width: `${state.bar}%` }}
                 />
               </div>
-              <p
-                className={`text-xs ${index === 2 ? "text-slate-300" : "text-muted-foreground"}`}
-              >
+              <p className="target-caption">
                 {row.target == null
-                  ? "No historical target configured"
+                  ? "Period goal not configured"
                   : `${state.percentage.toFixed(1)}% · ${state.excess > 0 ? `${state.excess.toFixed(1)} hrs beyond target` : `${state.remaining.toFixed(1)} hrs remaining`}`}
               </p>
-              <p
-                className={`mt-4 min-h-10 text-xs leading-relaxed ${index === 2 ? "text-[#e6ce80]" : "text-muted-foreground"}`}
-              >
+              {state.complete && (
+                <span className="achievement-badge">
+                  🏆{" "}
+                  {state.excess > 0 ? "OVERACHIEVER MODE" : "MISSION COMPLETE"}
+                </span>
+              )}
+              <p className="target-joke">
                 {targetMessage(
                   row.label,
                   row.hours,
@@ -131,18 +131,18 @@ export function PeriodProgress({
           );
         })}
       </div>
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 bg-[#faf9f5] px-5 py-3 text-xs sm:px-6">
+      <div className="trajectory-strip">
         <TrendingUp aria-hidden className="size-4" />
         <strong>
           {metrics.totalHours >= semester.targetHours
-            ? "Semester complete"
+            ? "🏆 Semester complete"
             : Math.abs(delta) < 1
-              ? "On pace"
+              ? "✅ On track"
               : delta > 0
-                ? "Ahead of pace"
-                : "Room to catch up"}
+                ? "🚀 Ahead"
+                : "⚠️ Behind"}
         </strong>
-        <span className="text-muted-foreground">
+        <span>
           {expected.toFixed(1)} hrs expected by today ·{" "}
           {Math.abs(delta).toFixed(1)} hrs {delta >= 0 ? "ahead" : "behind"}.
           Targets are prorated at semester boundaries.

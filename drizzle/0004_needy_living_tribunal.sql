@@ -1,0 +1,2 @@
+ALTER TABLE "users" ADD COLUMN "deleted_at" timestamp with time zone;--> statement-breakpoint
+ALTER TABLE "users" ADD CONSTRAINT "deleted_students_cannot_login" CHECK ("users"."deleted_at" is null or ("users"."role" = 'STUDENT' and "users"."active" = false and "users"."image" is null));

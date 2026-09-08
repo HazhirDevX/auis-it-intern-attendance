@@ -2,7 +2,7 @@
 
 A secure, semester-aware attendance and activity system for the AUIS IT Department. Interns log their own work, track progress, and review history; administrators manage access, semesters, department analytics, audit events, and formatted Excel exports.
 
-> Production status: the application is live with its Neon schema, seed data, encrypted Vercel environment, and dedicated published Google OAuth configuration. The Google handoff and AUIS domain hint are verified; final authenticated admin/student acceptance requires real AUIS accounts.
+The application uses Neon PostgreSQL and Google OAuth. Browser tests run against an isolated Neon QA branch; they use locally signed test sessions, not real Google passwords. Production OAuth must also be checked separately.
 
 - Production: <https://auis-it-intern-attendance.vercel.app>
 - Source: <https://github.com/HazhirDevX/auis-it-intern-attendance>
@@ -73,7 +73,7 @@ The migration enforces lower-case unique AUIS emails, positive hours up to 12, v
 Requirements: Node.js 20+, npm, a Neon project, and a Google Cloud OAuth client.
 
 ```bash
-git clone https://github.com/Hawrami01/auis-it-intern-attendance.git
+git clone https://github.com/HazhirDevX/auis-it-intern-attendance.git
 cd auis-it-intern-attendance
 npm install
 copy .env.example .env.local
@@ -117,7 +117,7 @@ Open `http://localhost:3000`. The seed is idempotent and creates:
    - `https://auis-it-intern-attendance.vercel.app/api/auth/callback/google`
 6. Put the client ID and secret in `.env.local` and in Vercel’s encrypted environment variables.
 
-The Google `hd` hint improves account selection, but it is **not** treated as authorization. The Auth.js callback verifies Google’s `email_verified` claim, validates the exact `auis.edu.krd` domain or the explicit external-account allowlist, then queries the active authorized-user record. Removing either check would weaken the security model.
+Google offers an unrestricted account picker so the explicitly approved personal account can sign in too. The Auth.js callback verifies Google’s `email_verified` claim, validates the exact `auis.edu.krd` domain or the explicit external-account allowlist, then queries the active, non-deleted authorized-user record. Removing either check would weaken the security model.
 
 ## Commands
 
@@ -169,7 +169,27 @@ The build command is `npm run build`; no static export is used because authentic
 
 For a real deployment, add organizational monitoring/rate limiting and schedule Neon backup/restore exercises according to AUIS IT policy.
 
-## Future improvements
+## V3 account deletion and layout
+
+- Deactivate is reversible; Delete Student permanently removes portal access. Both retain identified attendance and semester history for reporting.
+- Deletion sets `deleted_at`, disables access and memberships, removes the profile image, and records an audit event in one atomic statement. User IDs, names, emails, activities, hours, and membership records remain intact. This is not erasure of personal data or deletion of a Google account.
+- Deleted students cannot sign in, reuse an old session, reactivate, or register the same email again through the portal. Administrator accounts cannot be deleted through this workflow.
+- Migration `0004` adds a nullable timestamp and a constraint preventing a deleted student from becoming active. Existing records are unchanged. Never reset or reseed production to apply a redesign.
+- Navigation occupies a non-scrolling rail at normal laptop heights. Short screens use the accessible drawer. Only the workspace scrolls; its height excludes the persistent footer.
+- The pointer canvas draws only on interaction/resize, caps pixel density, does not update React state per pointer event, and disables itself for touch/reduced-motion environments.
+- Target celebrations are submission feedback only when a target is crossed, not on page refresh. Analytics offers accessible numeric tables alongside charts.
+
+Run protected browser checks in PowerShell against an isolated branch:
+
+```powershell
+$env:QA_DATABASE_HOST='your-isolated-branch-host.neon.tech'
+node scripts/qa.mjs npm run db:migrate
+node scripts/qa.mjs npm run test:e2e
+```
+
+The runner substitutes the branch host in the child process only. It does not edit saved credentials. Browser coverage includes all eleven requested widths, laptop heights, role enforcement, activity CRUD, targets, export, account deletion, expanded forms, and reduced motion.
+
+## Roadmap
 
 - Department categories and supervisor approval workflow
 - Optional immutable activity revision table beyond event snapshots

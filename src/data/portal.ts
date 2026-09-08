@@ -189,6 +189,7 @@ export async function getInterns() {
       email: users.email,
       role: users.role,
       active: users.active,
+      deletedAt: users.deletedAt,
       createdAt: users.createdAt,
       lastLoginAt: users.lastLoginAt,
     })
@@ -326,6 +327,7 @@ export async function getInternDetail(userId: string, semesterId: string) {
       email: users.email,
       role: users.role,
       active: users.active,
+      deletedAt: users.deletedAt,
       createdAt: users.createdAt,
       lastLoginAt: users.lastLoginAt,
     })

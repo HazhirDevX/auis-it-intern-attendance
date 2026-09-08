@@ -11,6 +11,7 @@ import { CalendarDays, Clock3, Send } from "lucide-react";
 import { toast } from "sonner";
 
 import { createActivityAction } from "@/actions/activities";
+import { SuccessReward } from "@/components/portal/success-reward";
 import { initialActionState } from "@/actions/types";
 import type { ActionState } from "@/actions/types";
 import { SubmitButton } from "@/components/portal/submit-button";
@@ -61,6 +62,12 @@ export function ActivityForm({ today }: { today: string }) {
         </CardTitle>
       </CardHeader>
       <CardContent>
+        {state.status === "success" && (
+          <SuccessReward
+            message={state.message}
+            achievement={state.achievement}
+          />
+        )}
         <form ref={formRef} action={action} className="space-y-5">
           <fieldset disabled={!hydrated} className="space-y-5">
             <div className="grid gap-5 sm:grid-cols-2">

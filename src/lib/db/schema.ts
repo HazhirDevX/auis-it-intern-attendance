@@ -30,6 +30,7 @@ export const users = pgTable(
     email: varchar("email", { length: 320 }).notNull(),
     role: userRole("role").notNull().default("STUDENT"),
     active: boolean("active").notNull().default(true),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
     image: text("image"),
     lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
@@ -43,6 +44,10 @@ export const users = pgTable(
     uniqueIndex("users_email_unique").on(table.email),
     index("users_role_active_idx").on(table.role, table.active),
     check("users_email_lowercase", sql`${table.email} = lower(${table.email})`),
+    check(
+      "deleted_students_cannot_login",
+      sql`${table.deletedAt} is null or (${table.role} = 'STUDENT' and ${table.active} = false and ${table.image} is null)`,
+    ),
     check(
       "users_allowed_email",
       sql`${table.email} like '%@auis.edu.krd' or ${table.email} = 'hazhir.a.2004@gmail.com'`,

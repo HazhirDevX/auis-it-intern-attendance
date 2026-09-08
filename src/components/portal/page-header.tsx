@@ -14,8 +14,8 @@ export function PageHeader({
   action?: React.ReactNode;
 }) {
   return (
-    <header className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
-      <div className="max-w-3xl">
+    <header className="page-heading">
+      <div className="min-w-0 max-w-3xl">
         {eyebrow && (
           <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#8a6a11]">
             {eyebrow}
@@ -35,7 +35,7 @@ export function PageHeader({
           {description}
         </p>
       </div>
-      {action}
+      {action && <div className="page-heading-action">{action}</div>}
     </header>
   );
 }

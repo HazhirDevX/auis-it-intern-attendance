@@ -41,17 +41,16 @@ describe("initial authorized accounts", () => {
         role: "STUDENT",
       },
     ]);
-    expect(new Set(INITIAL_AUTHORIZED_USERS.map(({ email }) => email)).size).toBe(
-      INITIAL_AUTHORIZED_USERS.length,
-    );
+    expect(
+      new Set(INITIAL_AUTHORIZED_USERS.map(({ email }) => email)).size,
+    ).toBe(INITIAL_AUTHORIZED_USERS.length);
   });
 
   it("uses normalized email addresses and only the approved Gmail exception", () => {
     for (const { email } of INITIAL_AUTHORIZED_USERS) {
       expect(email).toBe(email.toLowerCase());
       expect(
-        email.endsWith("@auis.edu.krd") ||
-          email === "hazhir.a.2004@gmail.com",
+        email.endsWith("@auis.edu.krd") || email === "hazhir.a.2004@gmail.com",
       ).toBe(true);
     }
   });

@@ -4,7 +4,7 @@ test("renders the AUIS login experience", async ({ page }) => {
   await page.goto("/");
   await expect(
     page.getByRole("heading", {
-      name: /Internship progress,\s*accounted for\./,
+      name: /Big ideas.*Small fixes.*Real impact/,
     }),
   ).toBeVisible();
   await expect(

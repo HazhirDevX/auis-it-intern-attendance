@@ -62,7 +62,13 @@ describe("calendar-based internship targets", () => {
       complete: true,
     });
     expect(progressState(0, 0).complete).toBe(false);
-    expect(targetMessage("Week", 10, 10)).toContain("10 hours");
+    expect(targetMessage("Week", 10, 10, 1)).toContain("10 hours");
+    expect(targetMessage("Week", 10, 10)).toContain("Weekly");
+    expect(targetMessage("Month", 31, 30)).toContain("Monthly");
+    expect(targetMessage("Semester", 130, 120)).toContain("exceeded");
+    expect(targetMessage("Week", 10, 10, 0)).not.toEqual(
+      targetMessage("Week", 10, 10, 1),
+    );
   });
   it("fills zero days and keeps monthly and weekly aggregation exact", () => {
     const data = [

@@ -8,15 +8,15 @@ export default function TermsPage() {
   return (
     <LegalPage title="Terms of Use" updated="August 26, 2026">
       <p>
-        By using the AUIS IT Intern Portal, you agree to use it only
-        for legitimate AUIS internship attendance and administrative purposes.
+        By using the AUIS IT Intern Portal, you agree to use it only for
+        legitimate AUIS internship attendance and administrative purposes.
       </p>
 
       <LegalSection title="Authorized use">
         <p>
           You must sign in with your own approved AUIS account. Do not share
-          access, attempt to view another intern&apos;s private records, bypass role
-          restrictions, or use the portal for an unrelated purpose.
+          access, attempt to view another intern&apos;s private records, bypass
+          role restrictions, or use the portal for an unrelated purpose.
         </p>
       </LegalSection>
 
@@ -32,16 +32,16 @@ export default function TermsPage() {
         <p>
           The portal may be updated, temporarily unavailable, or changed to meet
           operational, security, or AUIS policy requirements. Important records
-          should be handled according to the department&apos;s official retention and
-          reporting procedures.
+          should be handled according to the department&apos;s official
+          retention and reporting procedures.
         </p>
       </LegalSection>
 
       <LegalSection title="Prohibited activity">
         <p>
           You may not submit malicious content, interfere with the service,
-          automate unauthorized access, impersonate another person, or attempt to
-          extract information you are not permitted to access.
+          automate unauthorized access, impersonate another person, or attempt
+          to extract information you are not permitted to access.
         </p>
       </LegalSection>
 

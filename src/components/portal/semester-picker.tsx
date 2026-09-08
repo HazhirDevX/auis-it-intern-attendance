@@ -22,7 +22,7 @@ export function SemesterPicker({
   const pathname = usePathname();
   const router = useRouter();
   return (
-    <div className="min-w-56 space-y-2">
+    <div className="w-full min-w-0 space-y-2 sm:w-56">
       <Label className="flex items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground">
         <GraduationCap className="size-4" />
         Semester
@@ -36,7 +36,7 @@ export function SemesterPicker({
           router.push(`${pathname}?${params.toString()}`);
         }}
       >
-        <SelectTrigger>
+        <SelectTrigger aria-label="Semester">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

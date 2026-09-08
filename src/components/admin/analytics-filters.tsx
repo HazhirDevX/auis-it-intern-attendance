@@ -33,7 +33,7 @@ export function AdminAnalyticsFilters({
     router.push(`${pathname}?${params.toString()}`);
   }
   return (
-    <div className="grid min-w-[min(100%,28rem)] gap-3 sm:grid-cols-2">
+    <div className="grid w-full sm:w-[min(100%,28rem)] gap-3 sm:grid-cols-2">
       <div className="space-y-2">
         <Label className="text-xs uppercase tracking-wide text-muted-foreground">
           Semester
@@ -42,7 +42,7 @@ export function AdminAnalyticsFilters({
           value={semester}
           onValueChange={(value) => update("semester", value)}
         >
-          <SelectTrigger>
+          <SelectTrigger aria-label="Semester">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -62,7 +62,7 @@ export function AdminAnalyticsFilters({
           value={intern ?? "all"}
           onValueChange={(value) => update("intern", value)}
         >
-          <SelectTrigger>
+          <SelectTrigger aria-label="Intern">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
