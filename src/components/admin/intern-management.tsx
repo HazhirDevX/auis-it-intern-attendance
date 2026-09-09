@@ -151,6 +151,15 @@ export function AddInternForm({
                   .join(" ")}
               </p>
             )}
+            {state.existingUserId && (
+              <Button asChild variant="outline" className="mt-3">
+                <Link href={`/?view=intern&intern=${state.existingUserId}`}>
+                  {state.canReactivate
+                    ? "Review & reactivate account"
+                    : "View existing account"}
+                </Link>
+              </Button>
+            )}
           </div>
         </form>
       </CardContent>

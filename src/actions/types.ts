@@ -3,6 +3,8 @@ export type ActionState = {
   message: string;
   errors?: Record<string, string[]>;
   achievement?: boolean;
+  existingUserId?: string;
+  canReactivate?: boolean;
 };
 
 export const initialActionState: ActionState = {

@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { isAllowedGoogleEmail, normalizeAuisEmail } from "@/lib/validation";
+import { SESSION_MAX_AGE } from "@/lib/auth/session-policy";
 
 const publicPaths = [
   "/",
@@ -31,8 +32,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   session: {
     strategy: "jwt",
-    maxAge: 8 * 60 * 60,
+    maxAge: SESSION_MAX_AGE,
   },
+  jwt: { maxAge: SESSION_MAX_AGE },
   callbacks: {
     async signIn({ account, profile }) {
       if (account?.provider !== "google") return false;
@@ -70,21 +72,31 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return true;
     },
     async jwt({ token, account }) {
-      if (account && token.email) {
+      if (token.email) {
         const email = normalizeAuisEmail(token.email);
         const [user] = await db
-          .select({ id: users.id, role: users.role, active: users.active })
+          .select({
+            id: users.id,
+            role: users.role,
+            active: users.active,
+            deletedAt: users.deletedAt,
+          })
           .from(users)
           .where(eq(users.email, email))
           .limit(1);
 
+        if (!user?.active || user.deletedAt || !isAllowedGoogleEmail(email))
+          return null;
+        // Bind existing sessions to the original user, not a replacement with the same email.
+        if (!account && token.sub && token.sub !== user.id) return null;
         if (user) {
           token.sub = user.id;
+          token.email = email;
           token.role = user.role;
           token.active = user.active;
         }
       }
-      return token;
+      return token.email ? token : null;
     },
     async session({ session, token }) {
       if (session.user && token.sub) {

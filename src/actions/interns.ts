@@ -34,11 +34,24 @@ export async function addInternAction(
   }
 
   const existing = await db
-    .select({ id: users.id })
+    .select({
+      id: users.id,
+      active: users.active,
+      role: users.role,
+      deletedAt: users.deletedAt,
+    })
     .from(users)
     .where(eq(users.email, parsed.data.email))
     .limit(1);
-  if (existing.length) return errorState("This email already has an account.");
+  if (existing.length)
+    return {
+      ...errorState("This email already has an account."),
+      existingUserId: existing[0].id,
+      canReactivate:
+        !existing[0].active &&
+        !existing[0].deletedAt &&
+        existing[0].role === "STUDENT",
+    };
 
   try {
     const userId = crypto.randomUUID();
