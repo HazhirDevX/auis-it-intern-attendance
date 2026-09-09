@@ -22,11 +22,6 @@ export const INITIAL_AUTHORIZED_USERS = [
   { name: "DD 23103", email: "dd23103@auis.edu.krd", role: "STUDENT" },
   {
     name: "Hazhir Aso",
-    email: "hazhir.a.2004@auis.edu.krd",
-    role: "STUDENT",
-  },
-  {
-    name: "Hazhir Aso",
     email: "hazhir.a.2004@gmail.com",
     role: "STUDENT",
   },

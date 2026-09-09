@@ -101,7 +101,7 @@ npm run dev
 Open `http://localhost:3000`. The seed is idempotent and creates:
 
 - `zhir.barzan@auis.edu.krd`, `karo.omed@auis.edu.krd`, and `ha23109@auis.edu.krd` as active administrators
-- `lk24117@auis.edu.krd`, `dd23103@auis.edu.krd`, and `hazhir.a.2004@auis.edu.krd` as active students
+- `lk24117@auis.edu.krd` and `dd23103@auis.edu.krd` as active students
 - `Fall 2026` as the initial active semester
 
 ## Google OAuth setup
